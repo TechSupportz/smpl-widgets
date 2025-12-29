@@ -9,9 +9,9 @@ import WidgetKit
 import SwiftUI
 
 @main
-struct appwidgetsBundle: WidgetBundle {
+struct AppWidgetsBundle: WidgetBundle {
     var body: some Widget {
-        appwidgets()
-        appwidgetsControl()
+		CalendarWidget()
+		WeatherWidget()
     }
 }

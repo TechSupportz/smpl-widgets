@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7E7005FC2F022CC70090CE49 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7E7005FB2F022CC70090CE49 /* AppIcon.icon */; };
+		7E7005FD2F022CC70090CE49 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7E7005FB2F022CC70090CE49 /* AppIcon.icon */; };
 		7EA1FA952EC347F700460DD6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA1FA942EC347F700460DD6 /* WidgetKit.framework */; };
 		7EA1FA972EC347F700460DD6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA1FA962EC347F700460DD6 /* SwiftUI.framework */; };
 		7EA1FAA62EC347FA00460DD6 /* appwidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7EA1FA922EC347F700460DD6 /* appwidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -37,7 +39,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7EA1FA802EC347D000460DD6 /* smpl widgets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "smpl widgets.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E7005FB2F022CC70090CE49 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		7EA1FA802EC347D000460DD6 /* smpl-widgets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "smpl-widgets.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EA1FA922EC347F700460DD6 /* appwidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = appwidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EA1FA942EC347F700460DD6 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		7EA1FA962EC347F700460DD6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -92,6 +95,7 @@
 		7EA1FA772EC347D000460DD6 = {
 			isa = PBXGroup;
 			children = (
+				7E7005FB2F022CC70090CE49 /* AppIcon.icon */,
 				7EA1FA822EC347D000460DD6 /* smpl widgets */,
 				7EA1FA982EC347F700460DD6 /* appwidgets */,
 				7EA1FA932EC347F700460DD6 /* Frameworks */,
@@ -102,7 +106,7 @@
 		7EA1FA812EC347D000460DD6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7EA1FA802EC347D000460DD6 /* smpl widgets.app */,
+				7EA1FA802EC347D000460DD6 /* smpl-widgets.app */,
 				7EA1FA922EC347F700460DD6 /* appwidgetsExtension.appex */,
 			);
 			name = Products;
@@ -120,9 +124,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7EA1FA7F2EC347D000460DD6 /* smpl widgets */ = {
+		7EA1FA7F2EC347D000460DD6 /* smpl-widgets */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7EA1FA8B2EC347D300460DD6 /* Build configuration list for PBXNativeTarget "smpl widgets" */;
+			buildConfigurationList = 7EA1FA8B2EC347D300460DD6 /* Build configuration list for PBXNativeTarget "smpl-widgets" */;
 			buildPhases = (
 				7EA1FA7C2EC347D000460DD6 /* Sources */,
 				7EA1FA7D2EC347D000460DD6 /* Frameworks */,
@@ -137,11 +141,11 @@
 			fileSystemSynchronizedGroups = (
 				7EA1FA822EC347D000460DD6 /* smpl widgets */,
 			);
-			name = "smpl widgets";
+			name = "smpl-widgets";
 			packageProductDependencies = (
 			);
 			productName = "smpl widgets";
-			productReference = 7EA1FA802EC347D000460DD6 /* smpl widgets.app */;
+			productReference = 7EA1FA802EC347D000460DD6 /* smpl-widgets.app */;
 			productType = "com.apple.product-type.application";
 		};
 		7EA1FA912EC347F700460DD6 /* appwidgetsExtension */ = {
@@ -184,7 +188,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 7EA1FA7B2EC347D000460DD6 /* Build configuration list for PBXProject "smpl widgets" */;
+			buildConfigurationList = 7EA1FA7B2EC347D000460DD6 /* Build configuration list for PBXProject "smpl-widgets" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -198,7 +202,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7EA1FA7F2EC347D000460DD6 /* smpl widgets */,
+				7EA1FA7F2EC347D000460DD6 /* smpl-widgets */,
 				7EA1FA912EC347F700460DD6 /* appwidgetsExtension */,
 			);
 		};
@@ -209,6 +213,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E7005FC2F022CC70090CE49 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +221,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E7005FD2F022CC70090CE49 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,6 +384,7 @@
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -410,6 +417,7 @@
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -495,7 +503,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7EA1FA7B2EC347D000460DD6 /* Build configuration list for PBXProject "smpl widgets" */ = {
+		7EA1FA7B2EC347D000460DD6 /* Build configuration list for PBXProject "smpl-widgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7EA1FA892EC347D300460DD6 /* Debug */,
@@ -504,7 +512,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7EA1FA8B2EC347D300460DD6 /* Build configuration list for PBXNativeTarget "smpl widgets" */ = {
+		7EA1FA8B2EC347D300460DD6 /* Build configuration list for PBXNativeTarget "smpl-widgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7EA1FA8C2EC347D300460DD6 /* Debug */,
