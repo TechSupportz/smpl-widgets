@@ -33,6 +33,7 @@ struct CalendarWidgetView: View {
 				.monospacedDigit()
 				.padding(.vertical, -30)
 				.multilineTextAlignment(.center)
+				.contentTransition(.numericText())
 
 		}
 	}

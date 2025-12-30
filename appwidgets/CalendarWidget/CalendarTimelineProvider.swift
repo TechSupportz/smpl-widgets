@@ -22,12 +22,16 @@ struct CalendarTimelineProvider: TimelineProvider {
 		completion: @escaping @Sendable (Timeline<CalendarEntry>) -> Void
 	) {
 		let currentDate = Date()
-		let startOfDay = Calendar.current.startOfDay(for: currentDate)
-		let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+		let startOfCurrentDay = Calendar.current.startOfDay(for: currentDate)
+		let startOfNextDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfCurrentDay)!
 
-		let entry = CalendarEntry(date: currentDate)
-		completion(Timeline(entries: [entry], policy: .after(endOfDay)))
-
+		let entries = [CalendarEntry(date: startOfCurrentDay), CalendarEntry(date: startOfNextDay)]
+		
+		print(">>> startOfCurrentDay \(startOfCurrentDay)")
+		print(">>> startOfNextDay \(startOfNextDay)")
+		print(">>> entries \(entries)")
+		
+		completion(Timeline(entries: entries, policy: .atEnd))
 	}
 
 }
