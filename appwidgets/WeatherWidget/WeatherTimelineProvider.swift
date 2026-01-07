@@ -12,11 +12,11 @@ import WidgetKit
 import os
 
 struct WeatherTimelineProvider: TimelineProvider {
-	let logger = Logger(subsystem: "com.yourname.yourapp", category: "WeatherWidget")
+	let logger = Logger(subsystem: "com.tnitish.smpl-widgets", category: "WeatherWidget")
 	private let dummyWeatherEntry = WeatherEntry(
 		date: Date(),
 		condition: "cloudy",
-		temperature: Measurement<UnitTemperature>(value: 25.0, unit: .celsius,),
+		temperature: Measurement<UnitTemperature>(value: 25.0, unit: .celsius),
 		symbol: "cloud.sun.fill"
 	)
 
@@ -32,20 +32,17 @@ struct WeatherTimelineProvider: TimelineProvider {
 		in context: Context,
 		completion: @escaping @Sendable (Timeline<WeatherEntry>) -> Void
 	) {
-		print(">>> HELLO???")
 		Task {
-			print("Runnning Task")
 			let currentDate = Date()
 			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 60, to: currentDate)!
 
 			let weatherService = WeatherService()
-			let locationFetcher = await LocationFetcher()
 
 			do {
-				let userLocation = try await locationFetcher.getLocation()
-				print(userLocation)
+				let userLocation = try await LocationFetcher.shared.getLocation()
+				logger.info("📍 Location fetched: \(userLocation.coordinate.latitude), \(userLocation.coordinate.longitude)")
+				
 				let weather = try await weatherService.weather(for: userLocation)
-
 				logger.info("✅ Weather fetched successfully.")
 
 				let entry = WeatherEntry(

@@ -46,6 +46,11 @@ struct WeatherWidgetView: View {
 						maxWidth: .infinity,
 						alignment: .bottomTrailing
 					)
+				// NOTE: ONLY FOR DEBUGGING
+				Text(entry.date.formatted(date: .numeric, time: .shortened))
+					.font(.system(size: 8, design: .monospaced))
+					.foregroundColor(.secondary)
+					.offset(x: 0, y: 4)
 			}
 			.widgetURL(URL(string: "weather://"))
 		}
