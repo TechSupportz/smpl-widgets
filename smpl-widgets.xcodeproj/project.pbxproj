@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7E7005FC2F022CC70090CE49 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7E7005FB2F022CC70090CE49 /* AppIcon.icon */; };
-		7E7005FD2F022CC70090CE49 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7E7005FB2F022CC70090CE49 /* AppIcon.icon */; };
 		7EA1FA952EC347F700460DD6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA1FA942EC347F700460DD6 /* WidgetKit.framework */; };
 		7EA1FA972EC347F700460DD6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA1FA962EC347F700460DD6 /* SwiftUI.framework */; };
 		7EA1FAA62EC347FA00460DD6 /* appwidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7EA1FA922EC347F700460DD6 /* appwidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -39,11 +37,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7E7005FB2F022CC70090CE49 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		7E12DE882F03F19D00CB7D58 /* smpl-widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "smpl-widgets.entitlements"; sourceTree = "<group>"; };
 		7EA1FA802EC347D000460DD6 /* smpl-widgets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "smpl-widgets.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EA1FA922EC347F700460DD6 /* appwidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = appwidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EA1FA942EC347F700460DD6 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		7EA1FA962EC347F700460DD6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		7EC654BE2F0E415D0040B2F0 /* appwidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = appwidgetsExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -57,9 +56,9 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7EA1FA822EC347D000460DD6 /* smpl widgets */ = {
+		7EA1FA822EC347D000460DD6 /* smpl-widgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "smpl widgets";
+			path = "smpl-widgets";
 			sourceTree = "<group>";
 		};
 		7EA1FA982EC347F700460DD6 /* appwidgets */ = {
@@ -95,8 +94,9 @@
 		7EA1FA772EC347D000460DD6 = {
 			isa = PBXGroup;
 			children = (
-				7E7005FB2F022CC70090CE49 /* AppIcon.icon */,
-				7EA1FA822EC347D000460DD6 /* smpl widgets */,
+				7EC654BE2F0E415D0040B2F0 /* appwidgetsExtension.entitlements */,
+				7E12DE882F03F19D00CB7D58 /* smpl-widgets.entitlements */,
+				7EA1FA822EC347D000460DD6 /* smpl-widgets */,
 				7EA1FA982EC347F700460DD6 /* appwidgets */,
 				7EA1FA932EC347F700460DD6 /* Frameworks */,
 				7EA1FA812EC347D000460DD6 /* Products */,
@@ -139,7 +139,7 @@
 				7EA1FAA52EC347FA00460DD6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				7EA1FA822EC347D000460DD6 /* smpl widgets */,
+				7EA1FA822EC347D000460DD6 /* smpl-widgets */,
 			);
 			name = "smpl-widgets";
 			packageProductDependencies = (
@@ -213,7 +213,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7E7005FC2F022CC70090CE49 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,7 +220,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7E7005FD2F022CC70090CE49 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,12 +377,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "smpl-widgets.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -412,12 +412,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "smpl-widgets.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -445,6 +447,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = appwidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
@@ -475,6 +478,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = appwidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;

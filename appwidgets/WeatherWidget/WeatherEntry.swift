@@ -9,4 +9,7 @@ import WidgetKit
 
 struct WeatherEntry: TimelineEntry {
 	let date: Date
+	let condition: String
+	let temperature: Measurement<UnitTemperature>
+	let symbol: String
 }

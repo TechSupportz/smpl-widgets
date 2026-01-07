@@ -14,7 +14,7 @@ struct WeatherWidget: Widget {
 	var body: some WidgetConfiguration {
 		StaticConfiguration(
 			kind: kind,
-			provider:WeatherTimelineProvider()
+			provider: WeatherTimelineProvider()
 		) { entry in
 			WeatherWidgetView(entry: entry)
 				.containerBackground(.white, for: .widget)
@@ -26,8 +26,24 @@ struct WeatherWidget: Widget {
 	}
 }
 
-#Preview(as: .systemSmall) {
+#Preview("error-state", as: .systemSmall) {
 	WeatherWidget()
 } timeline: {
-	WeatherEntry(date: .now)
+	WeatherEntry(
+		date: .now,
+		condition: "error",
+		temperature: Measurement<UnitTemperature>(value: 25, unit: .celsius),
+		symbol: "questionmark.square.dashed"
+	)
+}
+
+#Preview("placeholder-state", as: .systemSmall) {
+	WeatherWidget()
+} timeline: {
+	WeatherEntry(
+		date: .now,
+		condition: "cloudy",
+		temperature: Measurement<UnitTemperature>(value: 25, unit: .celsius),
+		symbol: "cloud.fill"
+	)
 }

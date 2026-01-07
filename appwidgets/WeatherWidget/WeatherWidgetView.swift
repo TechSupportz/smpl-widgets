@@ -11,9 +11,42 @@ import WidgetKit
 struct WeatherWidgetView: View {
 	var entry: WeatherEntry
 	
+	var isError: Bool {
+		entry.condition == "error"
+	}
+
 	var body: some View {
-		VStack(spacing: 8) {
-			Text("Weather ⛅")
+			VStack() {
+				VStack(alignment: .leading, spacing: 8) {
+					Text("\(isError ? "Loading..." : entry.condition.capitalized)")
+						.font(.system(size: 24))
+						.padding(.vertical, -5)
+						.fontWidth(.condensed)
+						.fontWeight(.semibold)
+					Text("\(isError ? "?" : entry.temperature.value.rounded().formatted())°")
+						.font(.system(size: 32))
+						.padding(.vertical, -5)
+						.fontWidth(.compressed)
+						.fontWeight(.medium)
+						.foregroundColor(.secondary)
+
+				}
+				.frame(
+					minWidth: 0,
+					maxWidth: .infinity,
+					alignment: .topLeading
+				)
+				Spacer()
+				Image(systemName: entry.symbol)
+					.font(.system(size: 64))
+					.fontWidth(.compressed)
+					.fontWeight(.medium)
+					.frame(
+						minWidth: 0,
+						maxWidth: .infinity,
+						alignment: .bottomTrailing
+					)
+			}
+			.widgetURL(URL(string: "weather://"))
 		}
 	}
-}
