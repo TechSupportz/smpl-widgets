@@ -40,8 +40,10 @@ struct WeatherTimelineProvider: TimelineProvider {
 
 			do {
 				let userLocation = try await LocationFetcher.shared.getLocation()
-				logger.info("📍 Location fetched: \(userLocation.coordinate.latitude), \(userLocation.coordinate.longitude)")
-				
+				logger.info(
+					"📍 Location fetched: \(userLocation.coordinate.latitude), \(userLocation.coordinate.longitude)"
+				)
+
 				let weather = try await weatherService.weather(for: userLocation)
 				logger.info("✅ Weather fetched successfully.")
 
@@ -57,13 +59,20 @@ struct WeatherTimelineProvider: TimelineProvider {
 			} catch {
 				logger.error("❌ Failed to fetch weather: \(error.localizedDescription)")
 				let errorUpdateDate = Calendar.current.date(
-					byAdding: .second,
-					value: 10, to: currentDate
+					byAdding: .minute,
+					value: 15,
+					to: currentDate
 				)!
+
+				var errorCondition = "error"
+
+				if error.localizedDescription.contains("kCLErrorDomain") {
+					errorCondition += ",location"
+				}
 
 				let errorEntry = WeatherEntry(
 					date: currentDate,
-					condition: "error",
+					condition: errorCondition,
 					temperature: Measurement<UnitTemperature>(value: 0.0, unit: .celsius),
 					symbol: "questionmark.square.dashed"
 				)

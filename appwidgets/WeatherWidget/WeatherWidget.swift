@@ -37,6 +37,17 @@ struct WeatherWidget: Widget {
 	)
 }
 
+#Preview("location-error-state", as: .systemSmall) {
+	WeatherWidget()
+} timeline: {
+	WeatherEntry(
+		date: .now,
+		condition: "error,location",
+		temperature: Measurement<UnitTemperature>(value: 25, unit: .celsius),
+		symbol: "questionmark.square.dashed"
+	)
+}
+
 #Preview("placeholder-state", as: .systemSmall) {
 	WeatherWidget()
 } timeline: {
