@@ -55,6 +55,6 @@ struct WeatherWidget: Widget {
 		date: .now,
 		condition: "cloudy",
 		temperature: Measurement<UnitTemperature>(value: 25, unit: .celsius),
-		symbol: "cloud.fill"
+		symbol: "cloud.sun.fill"
 	)
 }
