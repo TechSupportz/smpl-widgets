@@ -34,7 +34,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 	) {
 		Task {
 			let currentDate = Date()
-			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 60, to: currentDate)!
+			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 45, to: currentDate)!
 
 			let weatherService = WeatherService()
 
