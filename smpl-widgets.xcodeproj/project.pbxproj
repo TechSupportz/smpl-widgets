@@ -53,11 +53,21 @@
 			);
 			target = 7EA1FA912EC347F700460DD6 /* appwidgetsExtension */;
 		};
+		7EA1FAAC2EC347FA00460DD7 /* Exceptions for "smpl-widgets" folder in "smpl-widgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7EA1FA7F2EC347D000460DD6 /* smpl-widgets */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7EA1FA822EC347D000460DD6 /* smpl-widgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7EA1FAAC2EC347FA00460DD7 /* Exceptions for "smpl-widgets" folder in "smpl-widgets" target */,
+			);
 			path = "smpl-widgets";
 			sourceTree = "<group>";
 		};
@@ -383,6 +393,7 @@
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "smpl-widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -418,6 +429,7 @@
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "smpl-widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

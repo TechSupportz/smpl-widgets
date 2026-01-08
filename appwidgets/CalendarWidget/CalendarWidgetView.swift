@@ -36,7 +36,7 @@ struct CalendarWidgetView: View {
 				.contentTransition(.numericText())
 
 		}
-		.widgetURL(URL(string: "calshow://"))
+		.widgetURL(URL(string: "smplwidgets://calendar"))
 	}
 	
 }

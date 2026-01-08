@@ -12,7 +12,8 @@ struct WeatherWidgetView: View {
 	var entry: WeatherEntry
 
 	var conditionText: String {
-		entry.condition.contains("error") ? entry.condition.contains("location") ? "Location" : "error" : entry.condition
+		entry.condition.contains("error")
+			? entry.condition.contains("location") ? "Location" : "error" : entry.condition
 	}
 
 	var temperatureText: String {
@@ -56,8 +57,7 @@ struct WeatherWidgetView: View {
 					maxWidth: .infinity,
 					alignment: .bottomTrailing
 				)
-
 		}
-		.widgetURL(URL(string: "weather://"))
+		.widgetURL(URL(string: "smplwidgets://weather"))
 	}
 }
