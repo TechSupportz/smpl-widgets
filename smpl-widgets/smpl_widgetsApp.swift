@@ -41,18 +41,18 @@ struct smpl_widgetsApp: App {
 			}
 			.onOpenURL { url in
 				let scheme = url.scheme ?? ""
-				
+
 				logger.info("onOpenURL triggered - URL: \(url.absoluteString), scheme: \(scheme)")
-				
+
 				if scheme == "smplwidgets" {
 					let destination = url.host ?? ""
 					logger.info("Custom URL received - destination: \(destination)")
-					
+
 					// Mark as launched from widget
 					launchedFromWidget = true
 					isCheckingLaunchSource = false
 					isRedirecting = true
-					
+
 					let systemURL: URL?
 					switch destination {
 					case "calendar":
@@ -65,7 +65,7 @@ struct smpl_widgetsApp: App {
 						systemURL = nil
 						logger.warning("Unknown destination: \(destination)")
 					}
-					
+
 					if let systemURL = systemURL {
 						logger.info("Opening system URL: \(systemURL.absoluteString)")
 						UIApplication.shared.open(systemURL)
@@ -75,9 +75,13 @@ struct smpl_widgetsApp: App {
 				}
 			}
 			.onChange(of: scenePhase) { oldPhase, newPhase in
-				logger.info("scenePhase changed: \(String(describing: oldPhase)) -> \(String(describing: newPhase)), launchedFromWidget: \(launchedFromWidget)")
-				
-				if newPhase == .active && (oldPhase == .background || oldPhase == .inactive) && launchedFromWidget {
+				logger.info(
+					"scenePhase changed: \(String(describing: oldPhase)) -> \(String(describing: newPhase)), launchedFromWidget: \(launchedFromWidget)"
+				)
+
+				if newPhase == .active && (oldPhase == .background || oldPhase == .inactive)
+					&& launchedFromWidget
+				{
 					// Terminate the app when returning from widget-initiated redirect
 					logger.info("Returning from widget redirect - terminating app")
 					exit(0)

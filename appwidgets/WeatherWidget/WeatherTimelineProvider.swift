@@ -34,7 +34,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 	) {
 		Task {
 			let currentDate = Date()
-			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 45, to: currentDate)!
+			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate)!
 
 			let weatherService = WeatherService()
 
@@ -55,7 +55,6 @@ struct WeatherTimelineProvider: TimelineProvider {
 				)
 
 				completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
-
 			} catch {
 				logger.error("❌ Failed to fetch weather: \(error.localizedDescription)")
 				let errorUpdateDate = Calendar.current.date(
@@ -79,7 +78,5 @@ struct WeatherTimelineProvider: TimelineProvider {
 				completion(Timeline(entries: [errorEntry], policy: .after(errorUpdateDate)))
 			}
 		}
-
 	}
-
 }

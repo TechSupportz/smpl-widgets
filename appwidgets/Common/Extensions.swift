@@ -15,7 +15,7 @@ extension Date {
 	var startOfDay: Date {
 		Calendar.current.startOfDay(for: self)
 	}
-	
+
 	/// Returns the start of the next day
 	var startOfNextDay: Date {
 		Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) ?? self
@@ -26,7 +26,7 @@ extension Date {
 
 extension View {
 	/// Applies the standard widget styling
-	func widgetStyle() -> some View {
+	func alwaysWhiteWidgetStyle() -> some View {
 		self
 			.containerBackground(.white, for: .widget)
 			.environment(\.colorScheme, .light)

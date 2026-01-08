@@ -30,17 +30,17 @@ struct WeatherWidgetView: View {
 		VStack {
 			VStack(alignment: .leading, spacing: 8) {
 				Text(conditionText.capitalized)
-					.font(.system(size: 24))
+					.font(.system(size: 26))
 					.padding(.vertical, -5)
 					.fontWidth(.condensed)
 					.fontWeight(.semibold)
 				Text(temperatureText)
 					.font(.system(size: 32))
-					.padding(.vertical, -5)
+					.padding(.vertical, -6)
 					.fontWidth(.compressed)
 					.fontWeight(.medium)
 					.foregroundColor(.secondary)
-
+					.contentTransition(.numericText())
 			}
 			.frame(
 				minWidth: 0,
@@ -52,6 +52,7 @@ struct WeatherWidgetView: View {
 				.font(.system(size: 64))
 				.fontWidth(.compressed)
 				.fontWeight(.medium)
+				.scaledToFit()
 				.frame(
 					minWidth: 0,
 					maxWidth: .infinity,

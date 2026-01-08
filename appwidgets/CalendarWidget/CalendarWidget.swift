@@ -17,8 +17,7 @@ struct CalendarWidget: Widget {
 			provider: CalendarTimelineProvider()
 		) { entry in
 			CalendarWidgetView(entry: entry)
-				.containerBackground(.white, for: .widget)
-				.environment(\.colorScheme, .light)
+				.alwaysWhiteWidgetStyle()
 		}
 		.configurationDisplayName("smpl.calendar")
 		.description("A simple widget which displays the current day, month and date.")

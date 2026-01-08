@@ -5,13 +5,13 @@
 //  Created by Nitish on 11/11/25.
 //
 
-import WidgetKit
 import SwiftUI
+import WidgetKit
 
 @main
 struct AppWidgetsBundle: WidgetBundle {
-    var body: some Widget {
+	var body: some Widget {
 		CalendarWidget()
 		WeatherWidget()
-    }
+	}
 }

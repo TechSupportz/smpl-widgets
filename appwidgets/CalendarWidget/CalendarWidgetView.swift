@@ -15,17 +15,14 @@ struct CalendarWidgetView: View {
 		VStack(spacing: 8) {
 			HStack(spacing: 4) {
 				Text(entry.date, format: .dateTime.weekday())
-					.font(.system(size: 24))
-					.fontWidth(.condensed)
 					.fontWeight(.bold)
 					.foregroundStyle(.red)
-					.padding(.vertical, -4)
 				Text(entry.date, format: .dateTime.month())
-					.font(.system(size: 24))
-					.fontWidth(.condensed)
 					.fontWeight(.light)
-					.padding(.vertical, -4)
 			}
+			.font(.system(size: 26))
+			.fontWidth(.condensed)
+			.padding(.vertical, -4)
 			Text(entry.date, format: .dateTime.day())
 				.font(.system(size: 128))
 				.fontWidth(.compressed)
@@ -34,9 +31,11 @@ struct CalendarWidgetView: View {
 				.padding(.vertical, -30)
 				.multilineTextAlignment(.center)
 				.contentTransition(.numericText())
-
 		}
+		.frame(
+			minWidth: 0,
+			maxWidth: .infinity,
+		)
 		.widgetURL(URL(string: "smplwidgets://calendar"))
 	}
-	
 }
