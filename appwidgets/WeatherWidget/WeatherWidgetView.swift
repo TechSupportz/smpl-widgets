@@ -34,6 +34,8 @@ struct WeatherWidgetView: View {
 					.padding(.vertical, -5)
 					.fontWidth(.condensed)
 					.fontWeight(.semibold)
+					.minimumScaleFactor(0.5)
+					.lineLimit(2)
 				Text(temperatureText)
 					.font(.system(size: 32))
 					.padding(.vertical, -6)
