@@ -6,11 +6,15 @@
 //
 
 import CoreLocation
+import EventKit
 import SwiftUI
 import WidgetKit
 
 struct ContentView: View {
 	@StateObject private var locationService = LocationService()
+	@StateObject private var calendarService = CalendarService()
+
+	// MARK: - Location Helpers
 
 	private var isLocationAuthorized: Bool {
 		locationService.authorizationStatus == CLAuthorizationStatus.authorizedWhenInUse
@@ -76,37 +80,43 @@ struct ContentView: View {
 			}
 			.padding(.top, 40)
 
-			// Location Permission Card
+			// Permission Cards
 			VStack(spacing: 16) {
-				HStack(spacing: 16) {
-					Image(systemName: locationStatusIcon)
-						.font(.title2)
-						.foregroundStyle(locationStatusColor)
-
-					VStack(alignment: .leading, spacing: 4) {
-						Text("Location Access")
-							.font(.headline)
-						Text(locationStatusText)
-							.font(.subheadline)
-							.foregroundStyle(.secondary)
+				// Location Permission Card
+				permissionCard(
+					icon: locationStatusIcon,
+					iconColor: locationStatusColor,
+					title: "Location Access",
+					subtitle: locationStatusText,
+					showButton: !isLocationAuthorized,
+					buttonTitle: locationService.authorizationStatus == .denied
+						? "Open Settings" : "Enable Location",
+					buttonAction: {
+						if locationService.authorizationStatus == .denied {
+							openSettings()
+						} else {
+							locationService.requestPermission()
+						}
 					}
-					Spacer()
-				}
+				)
 
-				if !isLocationAuthorized {
-					Button(action: {
-						locationService.requestPermission()
-					}) {
-						Text("Enable Location")
-							.font(.headline)
-							.padding(.vertical, 8)
+				// Calendar Permission Card
+				permissionCard(
+					icon: calendarService.authorizationStatus.iconName,
+					iconColor: calendarService.authorizationStatus.iconColor,
+					title: "Calendar Access",
+					subtitle: calendarService.authorizationStatus.displayName,
+					showButton: !calendarService.isAuthorized,
+					buttonTitle: calendarService.isDenied ? "Open Settings" : "Enable Calendar",
+					buttonAction: {
+						if calendarService.isDenied {
+							openSettings()
+						} else {
+							calendarService.requestPermission()
+						}
 					}
-					.buttonStyle(.automatic)
-				}
+				)
 			}
-			.padding(.vertical, 16)
-			.padding(.horizontal, 24)
-			.glassEffect(in: .rect(cornerRadius: 24.0))
 			.padding(.horizontal)
 
 			Spacer()
@@ -123,6 +133,59 @@ struct ContentView: View {
 			.buttonStyle(.glassProminent)
 			.padding(.horizontal)
 			.padding(.bottom, 24)
+		}
+		.onAppear {
+			// Refresh status when view appears (e.g., returning from Settings)
+			calendarService.refreshStatus()
+		}
+	}
+
+	// MARK: - Permission Card Component
+
+	private func permissionCard(
+		icon: String,
+		iconColor: Color,
+		title: String,
+		subtitle: String,
+		showButton: Bool,
+		buttonTitle: String,
+		buttonAction: @escaping () -> Void
+	) -> some View {
+		VStack(spacing: 16) {
+			HStack(spacing: 16) {
+				Image(systemName: icon)
+					.font(.title2)
+					.foregroundStyle(iconColor)
+
+				VStack(alignment: .leading, spacing: 4) {
+					Text(title)
+						.font(.headline)
+					Text(subtitle)
+						.font(.subheadline)
+						.foregroundStyle(.secondary)
+				}
+				Spacer()
+			}
+
+			if showButton {
+				Button(action: buttonAction) {
+					Text(buttonTitle)
+						.font(.headline)
+						.padding(.vertical, 8)
+				}
+				.buttonStyle(.automatic)
+			}
+		}
+		.padding(.vertical, 16)
+		.padding(.horizontal, 24)
+		.glassEffect(in: .rect(cornerRadius: 24.0))
+	}
+
+	// MARK: - Helpers
+
+	private func openSettings() {
+		if let url = URL(string: UIApplication.openSettingsURLString) {
+			UIApplication.shared.open(url)
 		}
 	}
 }

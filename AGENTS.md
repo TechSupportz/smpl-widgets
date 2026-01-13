@@ -63,12 +63,7 @@ xcodebuild test -project smpl-widgets.xcodeproj -scheme "smpl widgets" \
 
 ## Linting
 
-No SwiftLint configuration exists. If added, run:
-
-```bash
-swiftlint lint
-swiftlint lint --fix  # Auto-fix issues
-```
+Make use of swift-format
 
 ## Project Structure
 
@@ -105,7 +100,7 @@ All files use standard Xcode header format:
 //  FileName.swift
 //  TargetName
 //
-//  Created by Author on MM/DD/YY.
+//  Created by Author on DD/MM/YY.
 //
 ```
 
@@ -144,6 +139,8 @@ Each widget follows a 4-file pattern:
 - Some files mix tabs/spaces - prefer tabs for consistency
 
 ### SwiftUI View Style
+
+- Do not add any comments in the UI code itself. Marking sections is fine
 
 ```swift
 struct ExampleWidgetView: View {

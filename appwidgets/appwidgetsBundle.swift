@@ -14,5 +14,6 @@ struct AppWidgetsBundle: WidgetBundle {
 		CalendarWidget()
 		MinimalCalendarWidget()
 		WeatherWidget()
+		EventWidget()
 	}
 }

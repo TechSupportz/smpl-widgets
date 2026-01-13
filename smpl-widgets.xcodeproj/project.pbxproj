@@ -395,6 +395,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "smpl-widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Used to display your calendar events in the widget";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -431,6 +432,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "smpl-widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Used to display your calendar events in the widget";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
