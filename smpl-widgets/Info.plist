@@ -11,5 +11,13 @@
 			</array>
 		</dict>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.tnitish.smpl-widgets.refresh</string>
+	</array>
 </dict>
 </plist>

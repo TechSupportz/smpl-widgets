@@ -11,12 +11,10 @@ import WidgetKit
 struct EventWidgetView: View {
 	var entry: EventEntry
 
-	private let maxEventsToShow = 2
-
 	var body: some View {
 		VStack(spacing: 0) {
 			if entry.isAuthorized {
-				if entry.hasEvents {
+				if entry.hasDisplayableEvents {
 					eventsListView
 				} else {
 					emptyStateView
@@ -24,9 +22,7 @@ struct EventWidgetView: View {
 			} else {
 				permissionRequiredView
 			}
-
-			Spacer(minLength: 0)
-
+			Spacer()
 			bottomBar
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -35,20 +31,55 @@ struct EventWidgetView: View {
 
 	// MARK: - Events List View
 
+	private let eventSpacing: CGFloat = 6
+
 	private var eventsListView: some View {
-		VStack(alignment: .leading, spacing: 6) {
-			ForEach(entry.sortedEvents.prefix(maxEventsToShow)) { event in
-				eventRow(event)
+		GeometryReader { geometry in
+			let eventsToShow = eventsToDisplay(in: geometry.size.height)
+
+			VStack(alignment: .leading, spacing: eventSpacing) {
+				ForEach(eventsToShow) { event in
+					eventRow(event)
+				}
+			}
+			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+		}
+		.clipped()
+	}
+
+	private func eventsToDisplay(in availableHeight: CGFloat) -> [WidgetEvent] {
+		let allEvents = entry.displayableEvents
+		var totalHeight: CGFloat = 0
+		var result: [WidgetEvent] = []
+
+		for event in allEvents {
+			let rowHeight = estimatedRowHeight(for: event)
+			let spacing = result.isEmpty ? 0 : eventSpacing
+
+			if totalHeight + spacing + rowHeight <= availableHeight {
+				totalHeight += spacing + rowHeight
+				result.append(event)
+			} else {
+				break
 			}
 		}
-		.frame(maxWidth: .infinity, alignment: .leading)
-		.fixedSize(horizontal: false, vertical: true)
+
+		return result
+	}
+
+	private func estimatedRowHeight(for event: WidgetEvent) -> CGFloat {
+		let titleHeight: CGFloat = 20
+		let timeHeight: CGFloat = event.isAllDay ? 0 : 16
+		let locationHeight: CGFloat = (event.location != nil && !event.location!.isEmpty) ? 16 : 0
+		let verticalPadding: CGFloat = 2
+
+		return titleHeight + timeHeight + locationHeight + verticalPadding
 	}
 
 	private func eventRow(_ event: WidgetEvent) -> some View {
 		HStack(alignment: .center, spacing: 6) {
 			Capsule()
-				.fill(event.calendarColor)
+				.fill(event.pillColor(at: entry.date))
 				.frame(width: 4)
 				.frame(maxHeight: .infinity)
 
@@ -130,31 +161,28 @@ struct EventWidgetView: View {
 
 	private var bottomBar: some View {
 		HStack(alignment: .bottom) {
-			Text(formattedDate)
-				.font(.system(size: 12, weight: .regular, design: .monospaced))
-				.italic()
+			Text("Events today")
+				.font(.system(size: 12))
+				.fontWeight(.medium)
+				.fontWidth(.condensed)
+				.foregroundStyle(.secondary)
 			Spacer()
 			if entry.isAuthorized {
 				if entry.hasEvents {
 					Text(String(format: "%02d", entry.eventCount))
-						.font(.system(size: 16, weight: .regular, design: .monospaced))
-						.foregroundStyle(.red)
+						.font(.system(size: 12, weight: .regular, design: .monospaced))
+						.foregroundStyle(.secondary)
 				} else {
 					Image(systemName: "eyes")
-						.font(.system(size: 16))
+						.font(.system(size: 12))
 				}
 			} else {
 				Image(systemName: "exclamationmark.triangle")
-					.font(.system(size: 16))
+					.font(.system(size: 12))
 					.foregroundStyle(.orange)
 			}
 		}
-	}
-
-	private var formattedDate: String {
-		let formatter = DateFormatter()
-		formatter.dateFormat = "dd.MM.yy"
-		return formatter.string(from: entry.date)
+		.padding(.vertical, -4)
 	}
 }
 

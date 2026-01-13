@@ -7,7 +7,7 @@
 
 import SwiftUI
 import CoreLocation
-internal import Combine
+import Combine
 
 class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
 	private let locationManager = CLLocationManager()

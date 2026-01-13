@@ -9,6 +9,7 @@ import EventKit
 import SwiftUI
 import WidgetKit
 
+
 /// Authorization state for the widget to display appropriate UI
 enum CalendarAuthState {
 	case authorized
@@ -40,7 +41,6 @@ struct WidgetEvent: Identifiable {
 	let endDate: Date
 	let isAllDay: Bool
 	let location: String?
-	let calendarColor: Color
 
 	init(from ekEvent: EKEvent) {
 		self.id = ekEvent.eventIdentifier ?? UUID().uuidString
@@ -49,7 +49,6 @@ struct WidgetEvent: Identifiable {
 		self.endDate = ekEvent.endDate
 		self.isAllDay = ekEvent.isAllDay
 		self.location = ekEvent.location
-		self.calendarColor = Color(cgColor: ekEvent.calendar.cgColor)
 	}
 
 	/// Initializer for previews and placeholders
@@ -68,7 +67,40 @@ struct WidgetEvent: Identifiable {
 		self.endDate = endDate
 		self.isAllDay = isAllDay
 		self.location = location
-		self.calendarColor = calendarColor
+	}
+
+	// MARK: - Event State Logic
+
+	enum EventState {
+		case upcoming  // hasn't started
+		case inProgress  // started but not ended
+		case recentlyEnded  // ended within last 10 minutes
+	}
+
+	func state(at date: Date) -> EventState {
+		if date < startDate {
+			return .upcoming
+		} else if date >= startDate && date < endDate {
+			return .inProgress
+		} else {
+			return .recentlyEnded
+		}
+	}
+
+	func pillColor(at date: Date) -> Color {
+		if isAllDay {
+			// All-day events are always blue unless day is over (handled by filtering)
+			return .blue
+		}
+
+		switch state(at: date) {
+		case .upcoming:
+			return Color.gray.opacity(0.3)
+		case .inProgress:
+			return .orange
+		case .recentlyEnded:
+			return .green
+		}
 	}
 }
 
@@ -107,5 +139,28 @@ struct EventEntry: TimelineEntry {
 				return first.startDate < second.startDate
 			}
 		}
+	}
+
+	/// Filtered events for display:
+	/// 1. Haven't ended yet
+	/// 2. OR ended less than 10 minutes ago
+	var displayableEvents: [WidgetEvent] {
+		let tenMinutesAgo = date.addingTimeInterval(-600)  // 10 minutes = 600 seconds
+
+		return sortedEvents.filter { event in
+			if event.isAllDay {
+				// Show all-day events for the current day
+				// Assuming 'events' only contains today's events, so just check start/end relative to day
+				// But simpler: just check if it ends after "now" (which is effectively midnight for all-day)
+				return event.endDate > date
+			} else {
+				return event.endDate > tenMinutesAgo
+			}
+		}
+	}
+
+	/// Check if there are any displayable events
+	var hasDisplayableEvents: Bool {
+		!displayableEvents.isEmpty
 	}
 }

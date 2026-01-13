@@ -28,10 +28,6 @@ struct CalendarTimelineProvider: TimelineProvider {
 			CalendarEntry(date: currentDate.startOfNextDay)
 		]
 
-		print(">>> startOfCurrentDay \(currentDate.startOfDay)")
-		print(">>> startOfNextDay \(currentDate.startOfNextDay)")
-		print(">>> entries \(entries)")
-
 		completion(Timeline(entries: entries, policy: .atEnd))
 	}
 }

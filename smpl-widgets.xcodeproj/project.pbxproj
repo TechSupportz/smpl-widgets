@@ -63,6 +63,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7E9900017E9900017E990001 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		7EA1FA822EC347D000460DD6 /* smpl-widgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -104,6 +109,7 @@
 		7EA1FA772EC347D000460DD6 = {
 			isa = PBXGroup;
 			children = (
+				7E9900017E9900017E990001 /* Shared */,
 				7EC654BE2F0E415D0040B2F0 /* appwidgetsExtension.entitlements */,
 				7E12DE882F03F19D00CB7D58 /* smpl-widgets.entitlements */,
 				7EA1FA822EC347D000460DD6 /* smpl-widgets */,
@@ -149,6 +155,7 @@
 				7EA1FAA52EC347FA00460DD6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				7E9900017E9900017E990001 /* Shared */,
 				7EA1FA822EC347D000460DD6 /* smpl-widgets */,
 			);
 			name = "smpl-widgets";
@@ -171,6 +178,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				7E9900017E9900017E990001 /* Shared */,
 				7EA1FA982EC347F700460DD6 /* appwidgets */,
 			);
 			name = appwidgetsExtension;

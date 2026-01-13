@@ -5,7 +5,7 @@
 //  Created by Nitish on 01/13/26.
 //
 
-internal import Combine
+import Combine
 import EventKit
 import SwiftUI
 import os
@@ -18,15 +18,11 @@ class CalendarService: ObservableObject {
 
 	init() {
 		self.authorizationStatus = EKEventStore.authorizationStatus(for: .event)
-		logger.info(
-			"📅 CalendarService initialized with status: \(self.authorizationStatus.rawValue)")
 	}
 
 	/// Request full access to calendar events
 	func requestPermission() {
-		logger.info("📅 Requesting calendar permission...")
-
-		eventStore.requestFullAccessToEvents { [weak self] granted, error in
+		eventStore.requestFullAccessToEvents { [weak self] _, error in
 			DispatchQueue.main.async {
 				if let error = error {
 					self?.logger.error("❌ Calendar permission error: \(error.localizedDescription)")
@@ -34,12 +30,6 @@ class CalendarService: ObservableObject {
 
 				let newStatus = EKEventStore.authorizationStatus(for: .event)
 				self?.authorizationStatus = newStatus
-
-				if granted {
-					self?.logger.info("✅ Calendar permission granted")
-				} else {
-					self?.logger.warning("⚠️ Calendar permission denied")
-				}
 			}
 		}
 	}
@@ -48,9 +38,6 @@ class CalendarService: ObservableObject {
 	func refreshStatus() {
 		let newStatus = EKEventStore.authorizationStatus(for: .event)
 		if newStatus != authorizationStatus {
-			logger.info(
-				"📅 Authorization status changed: \(self.authorizationStatus.rawValue) -> \(newStatus.rawValue)"
-			)
 			authorizationStatus = newStatus
 		}
 	}
