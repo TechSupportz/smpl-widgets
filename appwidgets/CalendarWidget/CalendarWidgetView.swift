@@ -29,6 +29,7 @@ struct CalendarWidgetView: View {
 				.fontWeight(.bold)
 				.kerning(-4)
 				.padding(.vertical, -30)
+				.padding(.leading, -2)
 				.contentTransition(.numericText())
 		}
 		.frame(

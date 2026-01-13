@@ -41,7 +41,7 @@ struct WeatherWidgetView: View {
 					.padding(.vertical, -6)
 					.fontWidth(.compressed)
 					.fontWeight(.medium)
-					.foregroundColor(.secondary)
+					.foregroundStyle(Color(.gray))
 					.contentTransition(.numericText())
 			}
 			.frame(

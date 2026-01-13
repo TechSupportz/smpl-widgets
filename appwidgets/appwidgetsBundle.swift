@@ -12,6 +12,7 @@ import WidgetKit
 struct AppWidgetsBundle: WidgetBundle {
 	var body: some Widget {
 		CalendarWidget()
+		MinimalCalendarWidget()
 		WeatherWidget()
 	}
 }
