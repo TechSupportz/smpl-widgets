@@ -26,7 +26,17 @@ struct EventWidgetView: View {
 			bottomBar
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
-		.widgetURL(URL(string: "smplwidgets://events"))
+		.widgetURL(widgetURL)
+	}
+
+	private var widgetURL: URL {
+		// If not authorized, open smpl. app to grant permissions
+		// Otherwise, open Calendar to today's events
+		if entry.isAuthorized {
+			return URL(string: "smplwidgets://events")!
+		} else {
+			return URL(string: "smplwidgets://permissions")!
+		}
 	}
 
 	// MARK: - Events List View

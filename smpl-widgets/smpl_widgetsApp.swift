@@ -64,11 +64,15 @@ struct smpl_widgetsApp: App {
 						systemURL = URL(string: "calshow://")
 					case "weather":
 						systemURL = URL(string: "weather://")
-					case "events":
-						// Just open the main app
+					case "permissions":
+						// Open smpl. app and stay there (don't redirect)
 						systemURL = nil
 						launchedFromWidget = false
 						isRedirecting = false
+					case "events":
+						// Open Calendar app to today's date
+						let timestamp = Int(Date().timeIntervalSinceReferenceDate)
+						systemURL = URL(string: "calshow:\(timestamp)")
 					default:
 						systemURL = nil
 						logger.warning("Unknown destination: \(destination)")

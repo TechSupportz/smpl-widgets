@@ -61,9 +61,10 @@ struct WeatherTimelineProvider: TimelineProvider {
 				completion(Timeline(entries: entries, policy: .after(nextFetchTime)))
 			} catch {
 				logger.error("❌ Failed to fetch weather: \(error.localizedDescription)")
+				// Retry after 5 minutes on error for faster recovery
 				let errorUpdateDate = calendar.date(
 					byAdding: .minute,
-					value: 30,
+					value: 5,
 					to: currentDate
 				)!
 

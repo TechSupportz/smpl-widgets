@@ -63,6 +63,16 @@ struct WeatherWidgetView: View {
 					alignment: .bottomTrailing
 				)
 		}
-		.widgetURL(URL(string: "smplwidgets://weather"))
+		.widgetURL(widgetURL)
+	}
+
+	private var widgetURL: URL {
+		// If there's a location error, open smpl. app to grant permissions
+		// Otherwise, open Weather app
+		if entry.condition.contains("error") && entry.condition.contains("location") {
+			return URL(string: "smplwidgets://permissions")!
+		} else {
+			return URL(string: "smplwidgets://weather")!
+		}
 	}
 }
