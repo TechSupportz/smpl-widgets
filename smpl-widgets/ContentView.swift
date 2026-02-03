@@ -9,10 +9,15 @@ import CoreLocation
 import EventKit
 import SwiftUI
 import WidgetKit
+import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ContentView: View {
 	@StateObject private var locationService = LocationService()
 	@StateObject private var calendarService = CalendarService()
+	@Environment(\.openURL) private var openURL
 
 	// MARK: - Location Helpers
 
@@ -61,6 +66,14 @@ struct ContentView: View {
 			return "Unknown status"
 		}
 	}
+	
+	private var cachedLocationText: String {
+		guard let cachedLocation = SharedSettings.shared.lastKnownLocation else {
+			return "No cached location"
+		}
+		let updatedText = relativeTimeString(from: cachedLocation.timestamp)
+		return "Last cached: \(cachedLocation.coordinateString) • \(updatedText)"
+	}
 
 	var body: some View {
 		VStack(spacing: 24) {
@@ -88,6 +101,7 @@ struct ContentView: View {
 					iconColor: locationStatusColor,
 					title: "Location Access",
 					subtitle: locationStatusText,
+					secondaryText: cachedLocationText,
 					showButton: !isLocationAuthorized,
 					buttonTitle: locationService.authorizationStatus == .denied
 						? "Open Settings" : "Enable Location",
@@ -147,6 +161,7 @@ struct ContentView: View {
 		iconColor: Color,
 		title: String,
 		subtitle: String,
+		secondaryText: String? = nil,
 		showButton: Bool,
 		buttonTitle: String,
 		buttonAction: @escaping () -> Void
@@ -167,6 +182,14 @@ struct ContentView: View {
 				Spacer()
 			}
 
+			if let secondaryText {
+				Text(secondaryText)
+					.font(.caption)
+					.foregroundStyle(.secondary)
+					.fontDesign(.monospaced)
+					
+			}
+			
 			if showButton {
 				Button(action: buttonAction) {
 					Text(buttonTitle)
@@ -184,9 +207,17 @@ struct ContentView: View {
 	// MARK: - Helpers
 
 	private func openSettings() {
+		#if canImport(UIKit)
 		if let url = URL(string: UIApplication.openSettingsURLString) {
-			UIApplication.shared.open(url)
+			openURL(url)
 		}
+		#endif
+	}
+	
+	private func relativeTimeString(from date: Date) -> String {
+		let formatter = RelativeDateTimeFormatter()
+		formatter.unitsStyle = .short
+		return formatter.localizedString(for: date, relativeTo: Date())
 	}
 }
 

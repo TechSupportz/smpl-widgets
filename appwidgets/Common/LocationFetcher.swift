@@ -20,6 +20,12 @@ class LocationFetcher: NSObject, CLLocationManagerDelegate {
 	private let locationTimeoutSeconds: UInt64 = 10
 	private let cachedLocationMaxAge: TimeInterval = 1800  // 30 minutes for fresh cache
 	private let fallbackLocationMaxAge: TimeInterval = 18000  // 5 hours for error fallback
+	
+	private let appGroupID = "group.com.tnitish.smpl-widgets"
+	private let persistentCacheKey = "com.tnitish.smpl-widgets.lastKnownLocation"
+	private lazy var userDefaults: UserDefaults = {
+		UserDefaults(suiteName: appGroupID) ?? .standard
+	}()
 
 	override init() {
 		super.init()
@@ -37,14 +43,45 @@ class LocationFetcher: NSObject, CLLocationManagerDelegate {
 			break
 		}
 
+		// Try using CLLocationManager's in-memory cache first
 		if let lastLocation = manager.location,
 			lastLocation.timestamp.timeIntervalSinceNow > -cachedLocationMaxAge
 		{
 			logger.debug("Using cached location (age: \(-lastLocation.timestamp.timeIntervalSinceNow)s)")
+			savePersistedLocation(lastLocation)
 			return lastLocation
+		}
+		
+		// If in-memory cache is stale or unavailable, check persistent cache
+		if let persistedLocation = loadPersistedLocation(),
+			persistedLocation.age < cachedLocationMaxAge
+		{
+			logger.debug("Using persisted location cache (age: \(persistedLocation.age)s)")
+			return persistedLocation.toCLLocation()
 		}
 
 		return try await withTimeout()
+	}
+	
+	private func loadPersistedLocation() -> CachedLocation? {
+		guard let data = userDefaults.data(forKey: persistentCacheKey),
+			  let cached = try? JSONDecoder().decode(CachedLocation.self, from: data)
+		else {
+			return nil
+		}
+		return cached
+	}
+	
+	private func savePersistedLocation(_ location: CLLocation) {
+		let cached = CachedLocation(
+			latitude: location.coordinate.latitude,
+			longitude: location.coordinate.longitude,
+			timestamp: location.timestamp
+		)
+		if let data = try? JSONEncoder().encode(cached) {
+			userDefaults.set(data, forKey: persistentCacheKey)
+			logger.debug("Saved location to persistent cache")
+		}
 	}
 
 	private func withTimeout() async throws -> CLLocation {
@@ -106,6 +143,7 @@ class LocationFetcher: NSObject, CLLocationManagerDelegate {
 		Task { @MainActor in
 			if let location = locations.last {
 				logger.info("Location received: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+				savePersistedLocation(location)
 				resumeAllContinuations(with: .success(location))
 			}
 		}
@@ -115,14 +153,27 @@ class LocationFetcher: NSObject, CLLocationManagerDelegate {
 		Task { @MainActor in
 			logger.error("Location request failed: \(error.localizedDescription)")
 
-			if let lastLocation = manager.location,
-				lastLocation.timestamp.timeIntervalSinceNow > -fallbackLocationMaxAge
+		// First try in-memory cache
+		if let lastLocation = manager.location,
+			lastLocation.timestamp.timeIntervalSinceNow > -fallbackLocationMaxAge
+		{
+			logger.info("Using fallback cached location (age: \(-lastLocation.timestamp.timeIntervalSinceNow)s)")
+			savePersistedLocation(lastLocation)
+			resumeAllContinuations(with: .success(lastLocation))
+			return
+		}
+			
+			// Then try persistent cache
+			if let persistedLocation = loadPersistedLocation(),
+				persistedLocation.age < fallbackLocationMaxAge
 			{
-				logger.info("Using fallback cached location (age: \(-lastLocation.timestamp.timeIntervalSinceNow)s)")
-				resumeAllContinuations(with: .success(lastLocation))
-			} else {
-				resumeAllContinuations(with: .failure(error))
+				logger.info("Using fallback persisted location (age: \(persistedLocation.age)s)")
+				resumeAllContinuations(with: .success(persistedLocation.toCLLocation()))
+				return
 			}
+			
+			// No valid cache available
+			resumeAllContinuations(with: .failure(error))
 		}
 	}
 }
