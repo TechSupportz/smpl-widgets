@@ -170,8 +170,8 @@ struct EventWidgetView: View {
 	// MARK: - Bottom Bar
 
 	private var bottomBar: some View {
-		HStack(alignment: .bottom) {
-			Text("Events today")
+		HStack(alignment: .firstTextBaseline) {
+			Text("events today.")
 				.font(.system(size: 12))
 				.fontWeight(.medium)
 				.fontWidth(.condensed)
