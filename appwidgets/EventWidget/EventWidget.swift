@@ -20,15 +20,19 @@ struct EventWidget: Widget {
 				.alwaysWhiteWidgetStyle()
 		}
 		.configurationDisplayName("smpl.events")
-		.description("A simple widget which displays today's upcoming events.")
-		.supportedFamilies([.systemSmall])
+		.description("A simple widget which displays today's upcoming events and your week ahead.")
+		.supportedFamilies([.systemSmall, .systemMedium])
 	}
 }
 
-#Preview(as: .systemSmall) {
+#Preview("Small", as: .systemSmall) {
 	EventWidget()
 } timeline: {
-	EventEntry(date: .now, events: EventTimelineProvider.sampleEvents, authState: .authorized)
-	EventEntry(date: .now, events: [], authState: .authorized)
-	EventEntry(date: .now, events: [], authState: .denied)
+	EventEntry(date: .now, events: EventTimelineProvider.sampleWeekEvents, authState: .authorized)
+}
+
+#Preview("Medium", as: .systemMedium) {
+	EventWidget()
+} timeline: {
+	EventEntry(date: .now, events: EventTimelineProvider.sampleWeekEvents, authState: .authorized)
 }

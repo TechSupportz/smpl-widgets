@@ -120,6 +120,7 @@ struct EventEntry: TimelineEntry {
 		events.count
 	}
 
+
 	var hasEvents: Bool {
 		!events.isEmpty
 	}
@@ -141,17 +142,23 @@ struct EventEntry: TimelineEntry {
 		}
 	}
 
-	/// Filtered events for display:
+	/// Filtered events for display (today only):
 	/// 1. Haven't ended yet
 	/// 2. OR ended less than 10 minutes ago
 	var displayableEvents: [WidgetEvent] {
-		let tenMinutesAgo = date.addingTimeInterval(-600)  // 10 minutes = 600 seconds
+		let tenMinutesAgo = date.addingTimeInterval(-600)
+		let todayEvents = todayEvents
 
-		return sortedEvents.filter { event in
+		return todayEvents.sorted { first, second in
+			if first.isAllDay && !second.isAllDay {
+				return true
+			} else if !first.isAllDay && second.isAllDay {
+				return false
+			} else {
+				return first.startDate < second.startDate
+			}
+		}.filter { event in
 			if event.isAllDay {
-				// Show all-day events for the current day
-				// Assuming 'events' only contains today's events, so just check start/end relative to day
-				// But simpler: just check if it ends after "now" (which is effectively midnight for all-day)
 				return event.endDate > date
 			} else {
 				return event.endDate > tenMinutesAgo
@@ -162,5 +169,51 @@ struct EventEntry: TimelineEntry {
 	/// Check if there are any displayable events
 	var hasDisplayableEvents: Bool {
 		!displayableEvents.isEmpty
+	}
+
+	// MARK: - Week Events Logic
+
+	/// Events within today + 6 days
+	var weekEvents: [WidgetEvent] {
+		let calendar = Calendar.current
+		let startOfToday = calendar.startOfDay(for: date)
+		let startOfAfterWeek = calendar.date(byAdding: .day, value: 7, to: startOfToday)!
+
+		return events.filter { event in
+			let startDay = calendar.startOfDay(for: event.startDate)
+			return startDay >= startOfToday && startDay < startOfAfterWeek
+		}
+	}
+
+	/// Returns today's events from the week list
+	var todayEvents: [WidgetEvent] {
+		let calendar = Calendar.current
+		let today = calendar.startOfDay(for: date)
+		return weekEvents.filter { calendar.startOfDay(for: $0.startDate) == today }
+	}
+
+	/// Returns events for upcoming days (excluding today), sorted by date
+	var upcomingDaysEvents: [(date: Date, events: [WidgetEvent])] {
+		let calendar = Calendar.current
+		let today = calendar.startOfDay(for: date)
+
+		let grouped = Dictionary(grouping: weekEvents) { event in
+			calendar.startOfDay(for: event.startDate)
+		}
+
+		return grouped
+			.filter { $0.key != today }
+			.sorted { $0.key < $1.key }
+			.map { (date: $0.key, events: $0.value.sorted { $0.startDate < $1.startDate }) }
+	}
+
+	/// Check if there are any events in the next 7 days
+	var hasWeekEvents: Bool {
+		!weekEvents.isEmpty
+	}
+
+	/// All displayable events from today (sorted and filtered)
+	var todayDisplayableEvents: [WidgetEvent] {
+		displayableEvents
 	}
 }
