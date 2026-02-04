@@ -9,7 +9,6 @@ import EventKit
 import SwiftUI
 import WidgetKit
 
-
 /// Authorization state for the widget to display appropriate UI
 enum CalendarAuthState {
 	case authorized
@@ -72,9 +71,9 @@ struct WidgetEvent: Identifiable {
 	// MARK: - Event State Logic
 
 	enum EventState {
-		case upcoming  // hasn't started
-		case inProgress  // started but not ended
-		case recentlyEnded  // ended within last 10 minutes
+		case upcoming // hasn't started
+		case inProgress // started but not ended
+		case recentlyEnded // ended within last 10 minutes
 	}
 
 	func state(at date: Date) -> EventState {
@@ -120,7 +119,6 @@ struct EventEntry: TimelineEntry {
 		events.count
 	}
 
-
 	var hasEvents: Bool {
 		!events.isEmpty
 	}
@@ -149,21 +147,23 @@ struct EventEntry: TimelineEntry {
 		let tenMinutesAgo = date.addingTimeInterval(-600)
 		let todayEvents = todayEvents
 
-		return todayEvents.sorted { first, second in
-			if first.isAllDay && !second.isAllDay {
-				return true
-			} else if !first.isAllDay && second.isAllDay {
-				return false
-			} else {
-				return first.startDate < second.startDate
+		return
+			todayEvents.sorted { first, second in
+				if first.isAllDay && !second.isAllDay {
+					return true
+				} else if !first.isAllDay && second.isAllDay {
+					return false
+				} else {
+					return first.startDate < second.startDate
+				}
 			}
-		}.filter { event in
-			if event.isAllDay {
-				return event.endDate > date
-			} else {
-				return event.endDate > tenMinutesAgo
+			.filter { event in
+				if event.isAllDay {
+					return event.endDate > date
+				} else {
+					return event.endDate > tenMinutesAgo
+				}
 			}
-		}
 	}
 
 	/// Check if there are any displayable events
@@ -171,13 +171,13 @@ struct EventEntry: TimelineEntry {
 		!displayableEvents.isEmpty
 	}
 
-	// MARK: - Week Events Logic
+	// MARK: - Upcoming Events Logic
 
-	/// Events within today + 6 days
-	var weekEvents: [WidgetEvent] {
+	/// Events within today + 14 days (flat upcoming events list)
+	var upcomingEvents: [WidgetEvent] {
 		let calendar = Calendar.current
 		let startOfToday = calendar.startOfDay(for: date)
-		let startOfAfterWeek = calendar.date(byAdding: .day, value: 7, to: startOfToday)!
+		let startOfAfterWeek = calendar.date(byAdding: .day, value: 14, to: startOfToday)!
 
 		return events.filter { event in
 			let startDay = calendar.startOfDay(for: event.startDate)
@@ -185,11 +185,11 @@ struct EventEntry: TimelineEntry {
 		}
 	}
 
-	/// Returns today's events from the week list
+	/// Returns today's events from the upcoming list
 	var todayEvents: [WidgetEvent] {
 		let calendar = Calendar.current
 		let today = calendar.startOfDay(for: date)
-		return weekEvents.filter { calendar.startOfDay(for: $0.startDate) == today }
+		return upcomingEvents.filter { calendar.startOfDay(for: $0.startDate) == today }
 	}
 
 	/// Returns events for upcoming days (excluding today), sorted by date
@@ -197,20 +197,21 @@ struct EventEntry: TimelineEntry {
 		let calendar = Calendar.current
 		let today = calendar.startOfDay(for: date)
 
-		let grouped = Dictionary(grouping: weekEvents) { event in
+		let grouped = Dictionary(grouping: upcomingEvents) { event in
 			calendar.startOfDay(for: event.startDate)
 		}
 
-		return grouped
+		return
+			grouped
 			.filter { $0.key != today }
 			.sorted { $0.key < $1.key }
 			.map { (date: $0.key, events: $0.value.sorted { $0.startDate < $1.startDate }) }
 	}
 
-	/// Check if there are any events in the next 7 days
-	var hasWeekEvents: Bool {
-		!weekEvents.isEmpty
-	}
+    /// Check if there are any events in the next 14 days
+    var hasUpcomingEvents: Bool {
+        !upcomingEvents.isEmpty
+    }
 
 	/// All displayable events from today (sorted and filtered)
 	var todayDisplayableEvents: [WidgetEvent] {

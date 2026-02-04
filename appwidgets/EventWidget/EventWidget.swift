@@ -20,19 +20,47 @@ struct EventWidget: Widget {
 				.alwaysWhiteWidgetStyle()
 		}
 		.configurationDisplayName("smpl.events")
-		.description("A simple widget which displays today's upcoming events and your week ahead.")
+		.description(
+			"A simple widget which displays today's upcoming events and your upcoming events."
+		)
 		.supportedFamilies([.systemSmall, .systemMedium])
 	}
 }
 
-#Preview("Small", as: .systemSmall) {
+#Preview("Small - With Events", as: .systemSmall) {
 	EventWidget()
 } timeline: {
-	EventEntry(date: .now, events: EventTimelineProvider.sampleWeekEvents, authState: .authorized)
+	EventEntry(
+		date: .now, events: EventTimelineProvider.sampleUpcomingEvents, authState: .authorized)
 }
 
-#Preview("Medium", as: .systemMedium) {
+#Preview("Small - Empty", as: .systemSmall) {
 	EventWidget()
 } timeline: {
-	EventEntry(date: .now, events: EventTimelineProvider.sampleWeekEvents, authState: .authorized)
+	EventEntry(date: .now, events: [], authState: .authorized)
+}
+
+#Preview("Small - Permission Required", as: .systemSmall) {
+	EventWidget()
+} timeline: {
+	EventEntry(date: .now, events: [], authState: .denied)
+}
+
+#Preview("Medium - With Events", as: .systemMedium) {
+	EventWidget()
+} timeline: {
+	EventEntry(
+		date: .now, events: EventTimelineProvider.sampleUpcomingEvents, authState: .authorized)
+}
+
+#Preview("Medium - Empty", as: .systemMedium) {
+	EventWidget()
+} timeline: {
+	EventEntry(date: .now, events: [], authState: .authorized)
+}
+
+#Preview("Medium - Permission Required", as: .systemMedium) {
+	EventWidget()
+} timeline: {
+	EventEntry(date: .now, events: [], authState: .denied)
 }

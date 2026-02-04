@@ -68,14 +68,26 @@ struct EventWidgetView: View {
 	// MARK: - Medium Layout
 
 	private var mediumLayoutView: some View {
-		GeometryReader { geometry in
-			HStack(spacing: 0) {
-				// Left column: Today's events
-				mediumLeftColumn(height: geometry.size.height)
-				// Right column: Overflow + upcoming events
-				mediumRightColumn(height: geometry.size.height)
-			}
+		let todayEvents = entry.todayDisplayableEvents
+		let hasUpcomingEvents = !entry.upcomingDaysEvents.isEmpty
+		let hasNoEventsAtAll = todayEvents.isEmpty && !hasUpcomingEvents
+
+		// Scenario 3: No events at all - show centered empty state
+		if hasNoEventsAtAll {
+			return AnyView(emptyStateView)
 		}
+
+		// Scenarios 1 & 2: Show two-column layout
+		return AnyView(
+			GeometryReader { geometry in
+				HStack(spacing: 0) {
+					// Left column: Today's events or "All done for today"
+					mediumLeftColumn(height: geometry.size.height)
+					// Right column: Overflow + upcoming events
+					mediumRightColumn(height: geometry.size.height)
+				}
+			}
+		)
 	}
 
 	private func mediumLeftColumn(height: CGFloat) -> some View {
@@ -83,8 +95,22 @@ struct EventWidgetView: View {
 		let eventsToShow = eventsToDisplay(in: height, from: todayEvents)
 
 		return VStack(alignment: .leading, spacing: eventSpacing) {
-			ForEach(eventsToShow) { event in
-				eventRow(event)
+			if eventsToShow.isEmpty {
+				// Scenario 1: No events today but has upcoming
+				Spacer()
+				Text("All done\nfor today")
+					.font(.system(size: 18))
+					.foregroundStyle(.secondary)
+					.multilineTextAlignment(.center)
+					.padding(.trailing, 16)
+					.frame(maxWidth: .infinity)
+
+				Spacer()
+			} else {
+				// Show today's events
+				ForEach(eventsToShow) { event in
+					eventRow(event)
+				}
 			}
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -116,10 +142,10 @@ struct EventWidgetView: View {
 				daySection(date: dayData.date, events: dayData.events)
 			}
 
-			// Empty state for the week
+			// Scenario 2: Has events today, no upcoming events
 			if rightContent.overflowEvents.isEmpty && rightContent.days.isEmpty {
 				Spacer()
-				Text("Nothing to see here")
+				Text("No upcoming events")
 					.font(.system(size: 14))
 					.foregroundStyle(.secondary)
 					.multilineTextAlignment(.center)
@@ -340,7 +366,7 @@ struct EventWidgetView: View {
 
 	private var bottomBar: some View {
 		HStack(alignment: .firstTextBaseline) {
-			Text(widgetFamily == .systemMedium ? "events this week." : "events today.")
+			Text(widgetFamily == .systemMedium ? "events upcoming." : "events today.")
 				.font(.system(size: 12))
 				.fontWeight(.medium)
 				.fontWidth(.condensed)
