@@ -9,12 +9,13 @@ import SwiftUI
 import WidgetKit
 
 struct MonthCalendarWidgetView: View {
-	var entry: MonthCalendarEntry
-	private let calendar: Calendar = .current
+    var entry: MonthCalendarEntry
+    private let calendar: Calendar = .current
+    @Environment(\.widgetRenderingMode) var renderingMode
 
-	var body: some View {
-		let monthDays = monthDays(for: entry.date)
-		let weekdaySymbols = orderedWeekdaySymbols()
+    var body: some View {
+        let monthDays = monthDays(for: entry.date)
+        let weekdayInfo = orderedWeekdayInfo()
 
 		VStack(spacing: 4) {
 			Spacer()
@@ -33,15 +34,15 @@ struct MonthCalendarWidgetView: View {
 			}
 			.frame(maxWidth: .infinity)
 
-			HStack(spacing: 6) {
-				ForEach(weekdaySymbols, id: \.self) { symbol in
-					Text(symbol)
-						.font(.system(size: 10))
-						.fontDesign(.monospaced)
-						.foregroundStyle(.tertiary)
-						.frame(maxWidth: .infinity)
-				}
-			}
+            HStack(spacing: 6) {
+                ForEach(weekdayInfo) { day in
+                    Text(day.symbol)
+                        .font(.system(size: 10))
+                        .fontDesign(.monospaced)
+                        .foregroundStyle(.tertiary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
 
 			LazyVGrid(
 				columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 6
@@ -53,15 +54,22 @@ struct MonthCalendarWidgetView: View {
 						if let day = day {
 							if day.isToday {
 								Circle()
-									.fill(Color.red)
+									.fill(
+										renderingMode == .accented ? Color.white
+											.opacity(0.25) : renderingMode == .vibrant ? Color.white
+											.opacity(0.5) : Color.red
+									)
 									.frame(width: 16, height: 16)
+									.widgetAccentable()
 							}
 
 							Text(day.formatted())
 								.font(.system(size: 10))
 								.fontWeight(day.isToday ? .semibold : .medium)
 								.monospacedDigit()
-								.foregroundStyle(day.isToday ? .white : .primary)
+								.foregroundStyle(
+									day.isToday ? .white : .primary
+								)
 						} else {
 							// placeholder to keep grid cells consistent
 							Text("")
@@ -86,11 +94,22 @@ private struct MonthDay {
 }
 
 extension MonthCalendarWidgetView {
-	fileprivate func orderedWeekdaySymbols() -> [String] {
-		let symbols = calendar.veryShortStandaloneWeekdaySymbols
-		let startIndex = calendar.firstWeekday - 1
-		return Array(symbols[startIndex...] + symbols[..<startIndex])
-	}
+    fileprivate struct WeekdayInfo: Identifiable {
+        let id: Int
+        let symbol: String
+    }
+
+    fileprivate func orderedWeekdayInfo() -> [WeekdayInfo] {
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        let startIndex = calendar.firstWeekday - 1
+        let ordered = Array(symbols[startIndex...] + symbols[..<startIndex])
+
+        return ordered.enumerated().map { index, symbol in
+            // Compute weekday number (1...7) corresponding to symbol
+            let weekdayNumber = ((startIndex + index) % 7) + 1
+            return WeekdayInfo(id: weekdayNumber, symbol: symbol)
+        }
+    }
 
 	fileprivate func monthDays(for date: Date) -> [MonthDay?] {
 		// start of month

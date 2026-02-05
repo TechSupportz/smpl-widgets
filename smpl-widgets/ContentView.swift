@@ -7,16 +7,18 @@
 
 import CoreLocation
 import EventKit
+import Foundation
 import SwiftUI
 import WidgetKit
-import Foundation
+
 #if canImport(UIKit)
-import UIKit
+	import UIKit
 #endif
 
 struct ContentView: View {
 	@StateObject private var locationService = LocationService()
 	@StateObject private var calendarService = CalendarService()
+	@ObservedObject private var sharedSettings = SharedSettings.shared
 	@Environment(\.openURL) private var openURL
 
 	// MARK: - Location Helpers
@@ -66,7 +68,7 @@ struct ContentView: View {
 			return "Unknown status"
 		}
 	}
-	
+
 	private var cachedLocationText: String {
 		guard let cachedLocation = SharedSettings.shared.lastKnownLocation else {
 			return "No cached location"
@@ -76,65 +78,98 @@ struct ContentView: View {
 	}
 
 	var body: some View {
-		VStack(spacing: 24) {
-			// App Header
-			VStack(spacing: 8) {
-				Image(systemName: "widget.small")
-					.font(.system(size: 60))
+		ZStack(alignment: .bottom) {
+			VStack(spacing: 24) {
+				// App Header
+				VStack(spacing: 8) {
+					Image(systemName: "widget.small")
+						.font(.system(size: 60))
 
-				Text("smpl.widgets")
-					.font(.title)
-					.fontWeight(.black)
-					.italic()
+					Text("smpl.widgets")
+						.font(.title)
+						.fontWeight(.black)
+						.italic()
 
-				Text("Simple and Minimal Homescreen widgets")
-					.font(.subheadline)
-					.foregroundStyle(.secondary)
-			}
-			.padding(.top, 40)
+					Text("Simple and Minimal Homescreen widgets")
+						.font(.subheadline)
+						.foregroundStyle(.secondary)
+				}
+				.padding(.top, 24)
 
-			// Permission Cards
-			VStack(spacing: 16) {
-				// Location Permission Card
-				permissionCard(
-					icon: locationStatusIcon,
-					iconColor: locationStatusColor,
-					title: "Location Access",
-					subtitle: locationStatusText,
-					secondaryText: cachedLocationText,
-					showButton: !isLocationAuthorized,
-					buttonTitle: locationService.authorizationStatus == .denied
-						? "Open Settings" : "Enable Location",
-					buttonAction: {
-						if locationService.authorizationStatus == .denied {
-							openSettings()
-						} else {
-							locationService.requestPermission()
-						}
+				ScrollView(.vertical) {
+					VStack(spacing: 16) {
+						appearanceSettingsCard()
+
+						// Permission Cards
+						// Location Permission Card
+						permissionCard(
+							icon: locationStatusIcon,
+							iconColor: locationStatusColor,
+							title: "Location Access",
+							subtitle: locationStatusText,
+							secondaryText: cachedLocationText,
+							showButton: !isLocationAuthorized,
+							buttonTitle: locationService.authorizationStatus == .denied
+								? "Open Settings" : "Enable Location",
+							buttonAction: {
+								if locationService.authorizationStatus == .denied {
+									openSettings()
+								} else {
+									locationService.requestPermission()
+								}
+							}
+						)
+
+						// Calendar Permission Card
+						permissionCard(
+							icon: calendarService.authorizationStatus.iconName,
+							iconColor: calendarService.authorizationStatus.iconColor,
+							title: "Calendar Access",
+							subtitle: calendarService.authorizationStatus.displayName,
+							showButton: !calendarService.isAuthorized,
+							buttonTitle: calendarService.isDenied
+								? "Open Settings" : "Enable Calendar",
+							buttonAction: {
+								if calendarService.isDenied {
+									openSettings()
+								} else {
+									calendarService.requestPermission()
+								}
+							}
+						)
+					}
+					.padding(.horizontal)
+				}
+				.onAppear {
+					// Refresh status when view appears (e.g., returning from Settings)
+					calendarService.refreshStatus()
+				}
+				.onChange(of: sharedSettings.widgetColorScheme) { oldValue, newValue in
+					// Reload all widgets when color scheme preference changes
+					WidgetCenter.shared.reloadAllTimelines()
+				}
+				.contentMargins(.bottom, 96)
+				.contentMargins(.top, 24)
+				.mask(
+					VStack(spacing: 0) {
+						LinearGradient(
+							colors: [.clear, .black],
+							startPoint: .top,
+							endPoint: .bottom
+						)
+						.frame(height: 40)
+
+						Color.black // Middle fully visible
+
+						LinearGradient(
+							colors: [.black, .clear],
+							startPoint: .top,
+							endPoint: .bottom
+						)
+						.frame(height: 16)
 					}
 				)
-
-				// Calendar Permission Card
-				permissionCard(
-					icon: calendarService.authorizationStatus.iconName,
-					iconColor: calendarService.authorizationStatus.iconColor,
-					title: "Calendar Access",
-					subtitle: calendarService.authorizationStatus.displayName,
-					showButton: !calendarService.isAuthorized,
-					buttonTitle: calendarService.isDenied ? "Open Settings" : "Enable Calendar",
-					buttonAction: {
-						if calendarService.isDenied {
-							openSettings()
-						} else {
-							calendarService.requestPermission()
-						}
-					}
-				)
 			}
-			.padding(.horizontal)
-
-			Spacer()
-
 			// Widget Refresh Button
 			Button(action: {
 				WidgetCenter.shared.reloadAllTimelines()
@@ -146,11 +181,6 @@ struct ContentView: View {
 			}
 			.buttonStyle(.glassProminent)
 			.padding(.horizontal)
-			.padding(.bottom, 24)
-		}
-		.onAppear {
-			// Refresh status when view appears (e.g., returning from Settings)
-			calendarService.refreshStatus()
 		}
 	}
 
@@ -187,9 +217,8 @@ struct ContentView: View {
 					.font(.caption)
 					.foregroundStyle(.secondary)
 					.fontDesign(.monospaced)
-					
 			}
-			
+
 			if showButton {
 				Button(action: buttonAction) {
 					Text(buttonTitle)
@@ -204,16 +233,50 @@ struct ContentView: View {
 		.glassEffect(in: .rect(cornerRadius: 24.0))
 	}
 
+	// MARK: - Appearance Settings Card
+
+	private func appearanceSettingsCard() -> some View {
+		VStack(spacing: 16) {
+			HStack(spacing: 16) {
+				Image(systemName: "circle.lefthalf.filled")
+					.font(.title2)
+					.foregroundStyle(.blue)
+
+				VStack(alignment: .leading, spacing: 4) {
+					Text("Widget Appearance")
+						.font(.headline)
+					Text("Choose color scheme for widgets")
+						.font(.subheadline)
+						.foregroundStyle(.secondary)
+				}
+				Spacer()
+			}
+
+			Picker("Color Scheme", selection: $sharedSettings.widgetColorScheme) {
+				ForEach(WidgetColorScheme.allCases, id: \.self) { scheme in
+					Text(scheme.displayName)
+						.font(.body)
+						.tag(scheme)
+				}
+			}
+			.labelsHidden()
+			.pickerStyle(.menu)
+		}
+		.padding(.vertical, 16)
+		.padding(.horizontal, 24)
+		.glassEffect(in: .rect(cornerRadius: 24.0))
+	}
+
 	// MARK: - Helpers
 
 	private func openSettings() {
 		#if canImport(UIKit)
-		if let url = URL(string: UIApplication.openSettingsURLString) {
-			openURL(url)
-		}
+			if let url = URL(string: UIApplication.openSettingsURLString) {
+				openURL(url)
+			}
 		#endif
 	}
-	
+
 	private func relativeTimeString(from date: Date) -> String {
 		let formatter = RelativeDateTimeFormatter()
 		formatter.unitsStyle = .short
