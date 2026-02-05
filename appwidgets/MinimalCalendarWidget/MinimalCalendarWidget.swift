@@ -19,7 +19,7 @@ struct MinimalCalendarWidget: Widget {
 			MinimalCalendarWidgetView(entry: entry)
 				.alwaysWhiteWidgetStyle()
 		}
-		.configurationDisplayName("smpl.calendar.ii")
+		.configurationDisplayName("smpl.calendar")
 		.description("A simple widget which displays the current day, month and date.")
 		.supportedFamilies([.systemSmall])
 	}
