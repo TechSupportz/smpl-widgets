@@ -373,18 +373,36 @@ struct EventWidgetView: View {
 				.foregroundStyle(.secondary)
 			Spacer()
 			if entry.isAuthorized {
-				if entry.hasEvents {
-					Text(
-						String(
-							format: "%02d",
-							entry.eventCount
+				if widgetFamily == .systemSmall {
+					if entry.todayHasEvents {
+						Text(
+							String(
+								format: "%02d",
+								entry.todayEventCount
+							)
 						)
-					)
-					.font(.system(size: 12, weight: .regular, design: .monospaced))
-					.foregroundStyle(.secondary)
-				} else {
-					Image(systemName: "eyes")
-						.font(.system(size: 12))
+						.font(.system(size: 12, weight: .regular, design: .monospaced))
+						.foregroundStyle(.secondary)
+					} else {
+						Image(systemName: "eyes")
+							.font(.system(size: 12))
+					}
+				}
+				
+				if widgetFamily == .systemMedium {
+					if entry.hasEvents {
+						Text(
+							String(
+								format: "%02d",
+								entry.eventCount
+							)
+						)
+						.font(.system(size: 12, weight: .regular, design: .monospaced))
+						.foregroundStyle(.secondary)
+					} else {
+						Image(systemName: "eyes")
+							.font(.system(size: 12))
+					}
 				}
 			} else {
 				Image(systemName: "exclamationmark.triangle")

@@ -115,8 +115,16 @@ struct EventEntry: TimelineEntry {
 		self.authState = authState
 	}
 
+	var todayEventCount: Int {
+		events.count(where: { $0.startDate.startOfDay == date.startOfDay })
+	}
+
 	var eventCount: Int {
 		events.count
+	}
+	
+	var todayHasEvents: Bool {
+		todayEventCount > 0
 	}
 
 	var hasEvents: Bool {
@@ -208,10 +216,10 @@ struct EventEntry: TimelineEntry {
 			.map { (date: $0.key, events: $0.value.sorted { $0.startDate < $1.startDate }) }
 	}
 
-    /// Check if there are any events in the next 14 days
-    var hasUpcomingEvents: Bool {
-        !upcomingEvents.isEmpty
-    }
+	/// Check if there are any events in the next 14 days
+	var hasUpcomingEvents: Bool {
+		!upcomingEvents.isEmpty
+	}
 
 	/// All displayable events from today (sorted and filtered)
 	var todayDisplayableEvents: [WidgetEvent] {
