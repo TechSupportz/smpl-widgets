@@ -37,7 +37,7 @@ struct QuoteWidget: Widget {
 } timeline: {
 	QuoteEntry(
 		date: .now,
-		quote: "this is a cool quote")
+		quote: "this is the quote i want to use")
 	QuoteEntry(
 		date: .now,
 		quote: "this is a cool quote but with more text, like ALOT more text for some random reason")

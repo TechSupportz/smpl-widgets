@@ -9,16 +9,14 @@ import AppIntents
 import Foundation
 import WidgetKit
 
-struct ConfigurationAppIntent: WidgetConfigurationIntent {
-	static var title: LocalizedStringResource { "Configuration" }
-	static var description: IntentDescription { "Configuration for the widget." }
-}
-
 struct QuoteConfigurationIntent: WidgetConfigurationIntent {
 	static var title: LocalizedStringResource { "Quote" }
 	static var description: IntentDescription { "Choose the text shown in your quote widget." }
 
-	@Parameter(title: "Text")
+	@Parameter(
+		title: "Enter your quote...",
+		inputOptions: String.IntentInputOptions(multiline: true)
+	)
 	var quote: String?
 }
 

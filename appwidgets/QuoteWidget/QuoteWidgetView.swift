@@ -22,7 +22,7 @@ struct QuoteWidgetView: View {
 	private var quoteMarkSize: CGFloat {
 		switch family {
 		case .systemSmall: 20
-		case .systemMedium: 24
+		case .systemMedium: 22
 		case .systemLarge: 36
 		default: 20
 		}
