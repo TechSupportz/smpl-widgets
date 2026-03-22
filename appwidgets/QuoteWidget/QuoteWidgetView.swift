@@ -21,10 +21,10 @@ struct QuoteWidgetView: View {
 
 	private var quoteMarkSize: CGFloat {
 		switch family {
-		case .systemSmall: 24
-		case .systemMedium: 28
-		case .systemLarge: 32
-		default: 24
+		case .systemSmall: 20
+		case .systemMedium: 24
+		case .systemLarge: 36
+		default: 20
 		}
 	}
 
@@ -51,8 +51,11 @@ struct QuoteWidgetView: View {
 
 	private var quoteView: some View {
 		VStack(alignment: .leading, spacing: 0) {
-			Image(systemName: "quote.opening")
-				.font(.system(size: quoteMarkSize))
+			Image("QuoteMark")
+				.resizable()
+				.renderingMode(.template)
+				.aspectRatio(contentMode: .fit)
+				.frame(height: quoteMarkSize)
 				.foregroundStyle(.secondary)
 				.padding(.bottom, 6)
 
@@ -68,7 +71,6 @@ struct QuoteWidgetView: View {
 					maxHeight: .infinity,
 					alignment: .topLeading
 				)
-				.padding(.leading, 2)
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 	}
