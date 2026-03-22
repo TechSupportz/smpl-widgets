@@ -51,7 +51,7 @@ struct CachedLocation: Codable {
 	}
 }
 
-class SharedSettings: ObservableObject {
+final class SharedSettings: ObservableObject {
 	static let shared = SharedSettings()
 
 	private let appGroupID = "group.com.tnitish.smpl-widgets"

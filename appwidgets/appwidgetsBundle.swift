@@ -16,5 +16,6 @@ struct AppWidgetsBundle: WidgetBundle {
 		MonthCalendarWidget()
 		WeatherWidget()
 		QuoteWidget()
+		ImageWidget()
 	}
 }

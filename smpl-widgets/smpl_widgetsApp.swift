@@ -64,6 +64,10 @@ struct smpl_widgetsApp: App {
 						systemURL = URL(string: "calshow://")
 					case "weather":
 						systemURL = URL(string: "weather://")
+					case "image":
+						systemURL = nil
+						launchedFromWidget = false
+						isRedirecting = false
 					case "permissions":
 						// Open smpl. app and stay there (don't redirect)
 						systemURL = nil

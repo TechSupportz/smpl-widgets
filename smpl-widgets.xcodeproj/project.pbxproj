@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7E9900102F10000100000001 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E9900102F10000100000002 /* AppIntents.framework */; };
 		7EA1FA952EC347F700460DD6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA1FA942EC347F700460DD6 /* WidgetKit.framework */; };
 		7EA1FA972EC347F700460DD6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA1FA962EC347F700460DD6 /* SwiftUI.framework */; };
 		7EA1FAA62EC347FA00460DD6 /* appwidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7EA1FA922EC347F700460DD6 /* appwidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -37,6 +38,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7E9900102F10000100000002 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		7E12DE882F03F19D00CB7D58 /* smpl-widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "smpl-widgets.entitlements"; sourceTree = "<group>"; };
 		7EA1FA802EC347D000460DD6 /* smpl-widgets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "smpl-widgets.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EA1FA922EC347F700460DD6 /* appwidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = appwidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -98,6 +100,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E9900102F10000100000001 /* AppIntents.framework in Frameworks */,
 				7EA1FA972EC347F700460DD6 /* SwiftUI.framework in Frameworks */,
 				7EA1FA952EC347F700460DD6 /* WidgetKit.framework in Frameworks */,
 			);
@@ -131,6 +134,7 @@
 		7EA1FA932EC347F700460DD6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7E9900102F10000100000002 /* AppIntents.framework */,
 				7EA1FA942EC347F700460DD6 /* WidgetKit.framework */,
 				7EA1FA962EC347F700460DD6 /* SwiftUI.framework */,
 			);
@@ -404,6 +408,7 @@
 				INFOPLIST_FILE = "smpl-widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Used to display your calendar events in the widget";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to let you pick photos and albums for the image widget";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -441,6 +446,7 @@
 				INFOPLIST_FILE = "smpl-widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Used to display your calendar events in the widget";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to let you pick photos and albums for the image widget";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
