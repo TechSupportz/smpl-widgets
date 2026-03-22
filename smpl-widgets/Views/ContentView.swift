@@ -24,7 +24,6 @@ struct ContentView: View {
 	@Environment(\.openURL) private var openURL
 	@State private var selectedImageSlotItem: PhotosPickerItem?
 	@State private var imageSlots: [ImageSlotMetadata] = ImageWidgetStorage.shared.allSlots
-	@State private var imageWidgetStatusMessage: String?
 
 	// MARK: - Location Helpers
 
@@ -80,17 +79,6 @@ struct ContentView: View {
 		}
 		let updatedText = relativeTimeString(from: cachedLocation.timestamp)
 		return "Last cached: \(cachedLocation.coordinateString) • \(updatedText)"
-	}
-
-	private var savedImageSummaryText: String {
-		switch imageSlots.count {
-		case 0:
-			return "No saved images yet"
-		case 1:
-			return "1 saved image"
-		default:
-			return "\(imageSlots.count) saved images"
-		}
 	}
 
 	private var imageWidgetPermissionButtonTitle: String {
@@ -305,109 +293,21 @@ struct ContentView: View {
 	}
 
 	private func imageWidgetSettingsCard() -> some View {
-		VStack(spacing: 16) {
-			HStack(spacing: 16) {
-				Image(systemName: imageWidgetPhotoService.statusIcon)
-					.font(.title2)
-					.foregroundStyle(imageWidgetPhotoService.statusColor)
-
-				VStack(alignment: .leading, spacing: 4) {
-					Text("Image Widget")
-						.font(.headline)
-					Text(imageWidgetPhotoService.statusText)
-						.font(.subheadline)
-						.foregroundStyle(.secondary)
-				}
-				Spacer()
-			}
-
-			Text(savedImageSummaryText)
-				.font(.caption)
-				.foregroundStyle(.secondary)
-				.frame(maxWidth: .infinity, alignment: .leading)
-
-			if let imageWidgetStatusMessage {
-				Text(imageWidgetStatusMessage)
-					.font(.caption)
-					.foregroundStyle(.secondary)
-					.frame(maxWidth: .infinity, alignment: .leading)
-			}
-
-			if !imageWidgetPhotoService.isAuthorized {
-				Button(imageWidgetPermissionButtonTitle) {
-					Task {
-						await requestImageWidgetPhotoPermission()
-					}
-				}
-				.buttonStyle(.automatic)
-			} else {
-				PhotosPicker(
-					selection: $selectedImageSlotItem,
-					matching: .images,
-					photoLibrary: .shared()
-				) {
-					Label(
-						imageWidgetPhotoService.isSavingSlot ? "Saving..." : "Add Image",
-						systemImage: "plus"
-					)
-					.frame(maxWidth: .infinity)
-				}
-				.disabled(imagePickerButtonsDisabled)
-
-				Text("Add images here, then long-press the widget and choose the same name in Edit Widget. The widget editor shows names only, not image previews.")
-					.font(.caption)
-					.foregroundStyle(.secondary)
-					.frame(maxWidth: .infinity, alignment: .leading)
-
-				if imageSlots.isEmpty {
-					Text("Your saved image list will appear here.")
-						.font(.callout)
-						.foregroundStyle(.secondary)
-						.frame(maxWidth: .infinity, alignment: .leading)
-				} else {
-					VStack(spacing: 12) {
-						ForEach(imageSlots) { slot in
-							imageSlotRow(slot)
-						}
-					}
-				}
-			}
-		}
-		.padding(.vertical, 16)
-		.padding(.horizontal, 24)
-		.glassEffect(in: .rect(cornerRadius: 24.0))
+		ImageWidgetSettingsCard(
+			isAuthorized: imageWidgetPhotoService.isAuthorized,
+			isSaving: imageWidgetPhotoService.isSavingSlot,
+			slots: imageSlots,
+			permissionButtonTitle: imageWidgetPermissionButtonTitle,
+			selectedImageSlotItem: $selectedImageSlotItem,
+			onPermissionTap: {
+				Task { await requestImageWidgetPhotoPermission() }
+			},
+			onDeleteSlot: deleteImageSlot
+		)
 		.onChange(of: selectedImageSlotItem) { _, newValue in
-			guard let newValue else {
-				return
-			}
-
-			Task {
-				await saveSelectedImageSlot(from: newValue)
-			}
+			guard let newValue else { return }
+			Task { await saveSelectedImageSlot(from: newValue) }
 		}
-	}
-
-	private func imageSlotRow(_ slot: ImageSlotMetadata) -> some View {
-		HStack(spacing: 12) {
-			Image(systemName: "photo")
-				.font(.body)
-				.foregroundStyle(.secondary)
-
-			Text(slot.displayName)
-				.font(.body)
-				.frame(maxWidth: .infinity, alignment: .leading)
-
-			Button(role: .destructive) {
-				deleteImageSlot(slot)
-			} label: {
-				Image(systemName: "trash")
-					.font(.body)
-			}
-			.buttonStyle(.borderless)
-		}
-		.padding(.vertical, 10)
-		.padding(.horizontal, 12)
-		.background(.white.opacity(0.08), in: .rect(cornerRadius: 18))
 	}
 
 	// MARK: - Helpers
@@ -420,11 +320,10 @@ struct ContentView: View {
 
 		let granted = await imageWidgetPhotoService.requestPermissionIfNeeded()
 		guard granted else {
-			imageWidgetStatusMessage = "Photos access is required for image widgets."
+			
 			return
 		}
 
-		imageWidgetStatusMessage = "Photos access enabled. Add an image to create a slot."
 	}
 
 	private func saveSelectedImageSlot(from item: PhotosPickerItem) async {
@@ -433,19 +332,17 @@ struct ContentView: View {
 		}
 
 		do {
-			let savedSlot = try await imageWidgetPhotoService.createSlot(from: item, quality: 0.85)
+			let _ = try await imageWidgetPhotoService.createSlot(from: item, quality: 0.85)
 			refreshImageSlots()
-			imageWidgetStatusMessage = "Saved \(savedSlot.displayName)."
 			WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
 		} catch {
-			imageWidgetStatusMessage = error.localizedDescription
+			print(error.localizedDescription)
 		}
 	}
 
 	private func deleteImageSlot(_ slot: ImageSlotMetadata) {
 		ImageWidgetStorage.shared.deleteSlot(id: slot.id)
 		refreshImageSlots()
-		imageWidgetStatusMessage = "Deleted \(slot.displayName). Widgets using it now show the empty state."
 		WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
 	}
 
