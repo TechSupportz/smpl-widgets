@@ -10,10 +10,11 @@ import WidgetKit
 
 @main
 struct AppWidgetsBundle: WidgetBundle {
-    var body: some Widget {
+	var body: some Widget {
 		MinimalCalendarWidget()
 		EventWidget()
-        MonthCalendarWidget()
+		MonthCalendarWidget()
 		WeatherWidget()
-    }
+		QuoteWidget()
+	}
 }
