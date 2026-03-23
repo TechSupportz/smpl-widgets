@@ -13,7 +13,11 @@ struct QuoteTimelineProvider: AppIntentTimelineProvider {
 	typealias Intent = QuoteConfigurationIntent
 
 	func placeholder(in context: Context) -> QuoteEntry {
-		QuoteEntry(date: .now, quote: "")
+		QuoteEntry(
+			date: .now,
+			quote: "This is a placeholder quote.",
+			isPlaceholder: true
+		)
 	}
 
 	func snapshot(for configuration: QuoteConfigurationIntent, in context: Context) async -> QuoteEntry {

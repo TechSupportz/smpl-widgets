@@ -17,7 +17,8 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 	func placeholder(in context: Context) -> ImageEntry {
 		ImageEntry(
 			date: .now,
-			imageData: nil
+			imageData: nil,
+			isPlaceholder: true
 		)
 	}
 

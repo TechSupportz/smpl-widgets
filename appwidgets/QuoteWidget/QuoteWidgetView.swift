@@ -10,11 +10,16 @@ import WidgetKit
 
 struct QuoteWidgetView: View {
 	@Environment(\.widgetFamily) private var family
+	@Environment(\.redactionReasons) private var redactionReasons
 
 	var entry: QuoteEntry
 
 	private var hasQuote: Bool {
 		!entry.quote.isEmpty
+	}
+
+	private var isPlaceholder: Bool {
+		redactionReasons.contains(.placeholder) || entry.isPlaceholder
 	}
 
 	// MARK: - Font Sizes
@@ -40,7 +45,7 @@ struct QuoteWidgetView: View {
 	// MARK: - Body
 
 	var body: some View {
-		if hasQuote {
+		if isPlaceholder || hasQuote {
 			quoteView
 		} else {
 			emptyStateView

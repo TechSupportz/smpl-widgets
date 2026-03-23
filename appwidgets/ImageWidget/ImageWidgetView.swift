@@ -18,11 +18,16 @@ import WidgetKit
 
 struct ImageWidgetView: View {
 	@Environment(\.widgetFamily) private var family
+	@Environment(\.redactionReasons) private var redactionReasons
 
 	let entry: ImageEntry
 
 	let insetPadding: CGFloat = 12
 	let imageCornerRadius: CGFloat = 20
+
+	private var isPlaceholder: Bool {
+		redactionReasons.contains(.placeholder) || entry.isPlaceholder
+	}
 
 	private var widgetURL: URL? {
 		URL(string: "smplwidgets://image")
@@ -30,29 +35,48 @@ struct ImageWidgetView: View {
 
 	var body: some View {
 		Group {
-			if let widgetImage {
-				GeometryReader { proxy in
-					let imageFrameSize = CGSize(
-						width: max(proxy.size.width - (insetPadding * 2), 0),
-						height: max(proxy.size.height - (insetPadding * 2), 0)
-					)
-
-					widgetImage
-						.resizable()
-						.scaledToFill()
-						.frame(
-							width: imageFrameSize.width,
-							height: imageFrameSize.height
-						)
-						.clipped()
-						.clipShape(.rect(cornerRadius: imageCornerRadius))
-						.frame(maxWidth: .infinity, maxHeight: .infinity)
-				}
+			if isPlaceholder {
+				placeholderView
+			} else if let widgetImage {
+				imageContent(widgetImage)
 			} else {
 				emptyStateView
 			}
 		}
 		.widgetURL(widgetURL)
+	}
+
+	private var placeholderView: some View {
+		imageFrameContent {
+			RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous)
+				.fill(.tertiary.opacity(0.18))
+		}
+	}
+
+	private func imageContent(_ image: Image) -> some View {
+		imageFrameContent {
+			image
+				.resizable()
+				.scaledToFill()
+		}
+	}
+
+	private func imageFrameContent<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
+		GeometryReader { proxy in
+			let imageFrameSize = CGSize(
+				width: max(proxy.size.width - (insetPadding * 2), 0),
+				height: max(proxy.size.height - (insetPadding * 2), 0)
+			)
+
+			content()
+				.frame(
+					width: imageFrameSize.width,
+					height: imageFrameSize.height
+				)
+				.clipped()
+				.clipShape(.rect(cornerRadius: imageCornerRadius))
+				.frame(maxWidth: .infinity, maxHeight: .infinity)
+		}
 	}
 
 	private var emptyStateView: some View {
