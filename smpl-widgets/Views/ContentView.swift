@@ -174,7 +174,7 @@ struct ContentView: View {
 					WidgetCenter.shared.reloadAllTimelines()
 				}
 				.contentMargins(.bottom, 96)
-				.contentMargins(.top, 24)
+				.contentMargins(.top, 32)
 				.mask(
 					VStack(spacing: 0) {
 						LinearGradient(

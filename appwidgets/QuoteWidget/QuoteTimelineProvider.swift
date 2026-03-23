@@ -21,7 +21,11 @@ struct QuoteTimelineProvider: AppIntentTimelineProvider {
 	}
 
 	func snapshot(for configuration: QuoteConfigurationIntent, in context: Context) async -> QuoteEntry {
-		QuoteEntry(date: .now, quote: configuration.quoteText)
+		if context.isPreview {
+			return QuoteEntry(date: .now, quote: "Must be the water")
+		}
+
+		return QuoteEntry(date: .now, quote: configuration.quoteText)
 	}
 
 	func timeline(for configuration: QuoteConfigurationIntent, in context: Context) async -> Timeline<QuoteEntry> {
