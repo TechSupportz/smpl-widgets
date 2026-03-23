@@ -385,7 +385,7 @@ struct ContentView: View {
 		guard deepLinkTarget == imageWidgetSettingsSectionID else { return }
 
 		DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-			withAnimation {
+			withAnimation(.smooth) {
 				proxy.scrollTo(imageWidgetSettingsSectionID, anchor: .top)
 			}
 			deepLinkTarget = nil
