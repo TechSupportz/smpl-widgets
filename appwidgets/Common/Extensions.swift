@@ -41,7 +41,7 @@ extension View {
 		case .light:
 			self.containerBackground(.white, for: .widget)
 		case .dark:
-			self.containerBackground(.background, for: .widget)
+			self.containerBackground(Color(.systemGray6), for: .widget)
 		case .system:
 			self.containerBackground(.background, for: .widget)
 		}
