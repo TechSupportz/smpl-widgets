@@ -34,14 +34,10 @@ struct ImageWidgetSettingsCard: View {
 		isAuthorized ? "Enabled for saved image slots" : "Not configured"
 	}
 
-	private let slotListRowHeight: CGFloat = 76
+	private let slotListMaxHeight: CGFloat = 280
 
 	private var displayedSlots: [ImageSlotMetadata] {
 		Array(slots.reversed())
-	}
-
-	private var slotListHeight: CGFloat {
-		CGFloat(displayedSlots.count) * slotListRowHeight
 	}
 
 	var body: some View {
@@ -78,21 +74,28 @@ struct ImageWidgetSettingsCard: View {
 						.font(.callout)
 						.foregroundStyle(.secondary)
 						.frame(maxWidth: .infinity, alignment: .leading)
-				} else {
-					List {
+			} else {
+				ScrollView(.vertical) {
+					VStack(spacing: 12) {
 						ForEach(displayedSlots) { slot in
 							slotRow(slot)
-								.listRowInsets(EdgeInsets())
-								.listRowSeparator(.hidden)
-								.listRowBackground(Color.clear)
 						}
 					}
-					.listRowSpacing(12)
-					.listStyle(.plain)
-					.scrollContentBackground(.hidden)
-					.scrollDisabled(true)
-					.frame(height: slotListHeight)
 				}
+				.frame(maxHeight: slotListMaxHeight)
+				.scrollIndicators(.hidden)
+				.contentMargins(.top, 8)
+				.contentMargins(.bottom, 8)
+				.mask {
+					VStack(spacing: 0) {
+						LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+							.frame(height: 8)
+						Color.black
+						LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+							.frame(height: 8)
+					}
+				}
+			}
 				
 				PhotosPicker(
 					selection: selectedImageSlotItem,

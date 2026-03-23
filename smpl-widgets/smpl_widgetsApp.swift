@@ -15,8 +15,10 @@ struct smpl_widgetsApp: App {
 	@State private var isRedirecting = false
 	@State private var launchedFromWidget = false
 	@State private var isCheckingLaunchSource = true
+	@State private var deepLinkTarget: String?
 	@Environment(\.scenePhase) private var scenePhase
 	private let logger = Logger(subsystem: "com.tnitish.smpl-widgets", category: "AppRedirect")
+	private let imageWidgetSettingsSectionID = "imageWidgetSettings"
 
 	private let bgTaskID = "com.tnitish.smpl-widgets.refresh"
 
@@ -30,7 +32,7 @@ struct smpl_widgetsApp: App {
 			ZStack {
 				// Only show ContentView if confirmed NOT launched from widget
 				if !launchedFromWidget && !isRedirecting && !isCheckingLaunchSource {
-					ContentView()
+					ContentView(deepLinkTarget: $deepLinkTarget)
 				}
 
 				// Show loading during check, redirect, or widget launch
@@ -68,17 +70,20 @@ struct smpl_widgetsApp: App {
 						systemURL = nil
 						launchedFromWidget = false
 						isRedirecting = false
+						deepLinkTarget = imageWidgetSettingsSectionID
 					case "permissions":
 						// Open smpl. app and stay there (don't redirect)
 						systemURL = nil
 						launchedFromWidget = false
 						isRedirecting = false
+						deepLinkTarget = nil
 					case "events":
 						// Open Calendar app to today's date
 						let timestamp = Int(Date().timeIntervalSinceReferenceDate)
 						systemURL = URL(string: "calshow:\(timestamp)")
 					default:
 						systemURL = nil
+						deepLinkTarget = nil
 						logger.warning("Unknown destination: \(destination)")
 					}
 

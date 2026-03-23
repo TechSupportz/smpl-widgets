@@ -17,6 +17,7 @@ import WidgetKit
 #endif
 
 struct ContentView: View {
+	@Binding private var deepLinkTarget: String?
 	@StateObject private var locationService = LocationService()
 	@StateObject private var calendarService = CalendarService()
 	@StateObject private var imageWidgetPhotoService = ImageWidgetPhotoService()
@@ -24,6 +25,11 @@ struct ContentView: View {
 	@Environment(\.openURL) private var openURL
 	@State private var selectedImageSlotItem: PhotosPickerItem?
 	@State private var imageSlots: [ImageSlotMetadata] = ImageWidgetStorage.shared.allSlots
+	private let imageWidgetSettingsSectionID = "imageWidgetSettings"
+
+	init(deepLinkTarget: Binding<String?> = .constant(nil)) {
+		_deepLinkTarget = deepLinkTarget
+	}
 
 	// MARK: - Location Helpers
 
@@ -117,83 +123,90 @@ struct ContentView: View {
 				}
 				.padding(.top, 24)
 
-				ScrollView(.vertical) {
-					VStack(spacing: 16) {
-						appearanceSettingsCard()
+				ScrollViewReader { proxy in
+					ScrollView(.vertical) {
+						VStack(spacing: 16) {
+							appearanceSettingsCard()
 
-						// Permission Cards
-						// Location Permission Card
-						permissionCard(
-							icon: locationStatusIcon,
-							iconColor: locationStatusColor,
-							title: "Location Access",
-							subtitle: locationStatusText,
-							secondaryText: cachedLocationText,
-							showButton: !isLocationAuthorized,
-							buttonTitle: locationService.authorizationStatus == .denied
-								? "Open Settings" : "Enable Location",
-							buttonAction: {
-								if locationService.authorizationStatus == .denied {
-									openSettings()
-								} else {
-									locationService.requestPermission()
+							// Permission Cards
+							// Location Permission Card
+							permissionCard(
+								icon: locationStatusIcon,
+								iconColor: locationStatusColor,
+								title: "Location Access",
+								subtitle: locationStatusText,
+								secondaryText: cachedLocationText,
+								showButton: !isLocationAuthorized,
+								buttonTitle: locationService.authorizationStatus == .denied
+									? "Open Settings" : "Enable Location",
+								buttonAction: {
+									if locationService.authorizationStatus == .denied {
+										openSettings()
+									} else {
+										locationService.requestPermission()
+									}
 								}
-							}
-						)
+							)
 
-						// Calendar Permission Card
-						permissionCard(
-							icon: calendarService.authorizationStatus.iconName,
-							iconColor: calendarService.authorizationStatus.iconColor,
-							title: "Calendar Access",
-							subtitle: calendarService.authorizationStatus.displayName,
-							showButton: !calendarService.isAuthorized,
-							buttonTitle: calendarService.isDenied
-								? "Open Settings" : "Enable Calendar",
-							buttonAction: {
-								if calendarService.isDenied {
-									openSettings()
-								} else {
-									calendarService.requestPermission()
+							// Calendar Permission Card
+							permissionCard(
+								icon: calendarService.authorizationStatus.iconName,
+								iconColor: calendarService.authorizationStatus.iconColor,
+								title: "Calendar Access",
+								subtitle: calendarService.authorizationStatus.displayName,
+								showButton: !calendarService.isAuthorized,
+								buttonTitle: calendarService.isDenied
+									? "Open Settings" : "Enable Calendar",
+								buttonAction: {
+									if calendarService.isDenied {
+										openSettings()
+									} else {
+										calendarService.requestPermission()
+									}
 								}
-							}
-						)
+							)
 
-						imageWidgetSettingsCard()
+							imageWidgetSettingsCard()
+								.id(imageWidgetSettingsSectionID)
+						}
+						.padding(.horizontal)
 					}
-					.padding(.horizontal)
-				}
-				.onAppear {
-					// Refresh status when view appears (e.g., returning from Settings)
-					calendarService.refreshStatus()
-					imageWidgetPhotoService.refreshAuthorizationStatus()
-					refreshImageSlots()
-				}
-				.onChange(of: sharedSettings.widgetColorScheme) {
-					// Reload all widgets when color scheme preference changes
-					WidgetCenter.shared.reloadAllTimelines()
-				}
-				.contentMargins(.bottom, 96)
-				.contentMargins(.top, 32)
-				.mask(
-					VStack(spacing: 0) {
-						LinearGradient(
-							colors: [.clear, .black],
-							startPoint: .top,
-							endPoint: .bottom
-						)
-						.frame(height: 40)
-
-						Color.black // Middle fully visible
-
-						LinearGradient(
-							colors: [.black, .clear],
-							startPoint: .top,
-							endPoint: .bottom
-						)
-						.frame(height: 16)
+					.onAppear {
+						// Refresh status when view appears (e.g., returning from Settings)
+						calendarService.refreshStatus()
+						imageWidgetPhotoService.refreshAuthorizationStatus()
+						refreshImageSlots()
+						scrollToDeepLinkTarget(using: proxy)
 					}
-				)
+					.onChange(of: deepLinkTarget) {
+						scrollToDeepLinkTarget(using: proxy)
+					}
+					.onChange(of: sharedSettings.widgetColorScheme) {
+						// Reload all widgets when color scheme preference changes
+						WidgetCenter.shared.reloadAllTimelines()
+					}
+					.contentMargins(.bottom, 96)
+					.contentMargins(.top, 32)
+					.mask(
+						VStack(spacing: 0) {
+							LinearGradient(
+								colors: [.clear, .black],
+								startPoint: .top,
+								endPoint: .bottom
+							)
+							.frame(height: 40)
+
+							Color.black // Middle fully visible
+
+							LinearGradient(
+								colors: [.black, .clear],
+								startPoint: .top,
+								endPoint: .bottom
+							)
+							.frame(height: 16)
+						}
+					)
+				}
 			}
 			// Widget Refresh Button
 			Button(action: {
@@ -367,8 +380,19 @@ struct ContentView: View {
 		formatter.unitsStyle = .short
 		return formatter.localizedString(for: date, relativeTo: Date())
 	}
+
+	private func scrollToDeepLinkTarget(using proxy: ScrollViewProxy) {
+		guard deepLinkTarget == imageWidgetSettingsSectionID else { return }
+
+		DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+			withAnimation {
+				proxy.scrollTo(imageWidgetSettingsSectionID, anchor: .top)
+			}
+			deepLinkTarget = nil
+		}
+	}
 }
 
 #Preview {
-	ContentView()
+	ContentView(deepLinkTarget: .constant(nil))
 }
