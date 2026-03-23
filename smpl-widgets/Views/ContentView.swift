@@ -333,7 +333,9 @@ struct ContentView: View {
 
 		do {
 			let _ = try await imageWidgetPhotoService.createSlot(from: item, quality: 0.85)
-			refreshImageSlots()
+			withAnimation {
+				refreshImageSlots()
+			}
 			WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
 		} catch {
 			print(error.localizedDescription)
@@ -342,7 +344,9 @@ struct ContentView: View {
 
 	private func deleteImageSlot(_ slot: ImageSlotMetadata) {
 		ImageWidgetStorage.shared.deleteSlot(id: slot.id)
-		refreshImageSlots()
+		withAnimation {
+			refreshImageSlots()
+		}
 		WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
 	}
 

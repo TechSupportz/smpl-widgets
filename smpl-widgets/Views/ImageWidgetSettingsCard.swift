@@ -34,6 +34,16 @@ struct ImageWidgetSettingsCard: View {
 		isAuthorized ? "Enabled for saved image slots" : "Not configured"
 	}
 
+	private let slotListRowHeight: CGFloat = 76
+
+	private var displayedSlots: [ImageSlotMetadata] {
+		Array(slots.reversed())
+	}
+
+	private var slotListHeight: CGFloat {
+		CGFloat(displayedSlots.count) * slotListRowHeight
+	}
+
 	var body: some View {
 		VStack(spacing: 16) {
 			HStack(spacing: 16) {
@@ -69,11 +79,19 @@ struct ImageWidgetSettingsCard: View {
 						.foregroundStyle(.secondary)
 						.frame(maxWidth: .infinity, alignment: .leading)
 				} else {
-					VStack(spacing: 12) {
-						ForEach(slots) { slot in
+					List {
+						ForEach(displayedSlots) { slot in
 							slotRow(slot)
+								.listRowInsets(EdgeInsets())
+								.listRowSeparator(.hidden)
+								.listRowBackground(Color.clear)
 						}
 					}
+					.listRowSpacing(12)
+					.listStyle(.plain)
+					.scrollContentBackground(.hidden)
+					.scrollDisabled(true)
+					.frame(height: slotListHeight)
 				}
 				
 				PhotosPicker(
