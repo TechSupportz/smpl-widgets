@@ -153,9 +153,8 @@ struct EventEntry: TimelineEntry {
 
 	var todayEventCount: Int {
 		let calendar = Calendar.current
-		let today = calendar.startOfDay(for: date)
 
-		return events.count(where: { calendar.startOfDay(for: $0.startDate) == today })
+		return events.count(where: { $0.overlaps(day: date, calendar: calendar) })
 	}
 
 	var eventCount: Int {
@@ -227,16 +226,14 @@ struct EventEntry: TimelineEntry {
 		let startOfAfterWeek = calendar.date(byAdding: .day, value: 14, to: startOfToday)!
 
 		return events.filter { event in
-			let startDay = calendar.startOfDay(for: event.startDate)
-			return startDay >= startOfToday && startDay < startOfAfterWeek
+			event.overlaps(start: startOfToday, end: startOfAfterWeek)
 		}
 	}
 
 	/// Returns today's events from the upcoming list
 	var todayEvents: [WidgetEvent] {
 		let calendar = Calendar.current
-		let today = calendar.startOfDay(for: date)
-		return upcomingEvents.filter { calendar.startOfDay(for: $0.startDate) == today }
+		return upcomingEvents.filter { $0.overlaps(day: date, calendar: calendar) }
 	}
 
 	/// Returns events for upcoming days (excluding today), sorted by date
