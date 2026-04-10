@@ -102,6 +102,32 @@ struct WidgetEvent: Identifiable {
 		}
 	}
 
+	func overlaps(day: Date, calendar: Calendar = .current) -> Bool {
+		let dayStart = calendar.startOfDay(for: day)
+		let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
+
+		return startDate < dayEnd && endDate > dayStart
+	}
+
+	func overlaps(start: Date, end: Date) -> Bool {
+		startDate < end && endDate > start
+	}
+
+	func spansMultipleDays(calendar: Calendar = .current) -> Bool {
+		let startDay = calendar.startOfDay(for: startDate)
+		let effectiveEndDate = endDate.addingTimeInterval(-1)
+		let endDay = calendar.startOfDay(for: effectiveEndDate)
+
+		return startDay < endDay
+	}
+
+	func upcomingDisplayDay(relativeTo date: Date, calendar: Calendar = .current) -> Date {
+		let today = calendar.startOfDay(for: date)
+		let startDay = calendar.startOfDay(for: startDate)
+
+		return max(today, startDay)
+	}
+
 	private static func calendarColor(for calendar: EKCalendar) -> Color {
 		#if canImport(UIKit)
 			if let cgColor = calendar.cgColor {
@@ -217,16 +243,19 @@ struct EventEntry: TimelineEntry {
 	var upcomingDaysEvents: [(date: Date, events: [WidgetEvent])] {
 		let calendar = Calendar.current
 		let today = calendar.startOfDay(for: date)
+		let endOfRange = calendar.date(byAdding: .day, value: 14, to: today)!
 
-		let grouped = Dictionary(grouping: upcomingEvents) { event in
-			calendar.startOfDay(for: event.startDate)
+		return Dictionary(grouping: upcomingEvents) {
+			$0.upcomingDisplayDay(relativeTo: date, calendar: calendar)
 		}
-
-		return
-			grouped
-			.filter { $0.key != today }
-			.sorted { $0.key < $1.key }
-			.map { (date: $0.key, events: $0.value.sorted { $0.startDate < $1.startDate }) }
+		.filter { $0.key > today && $0.key < endOfRange }
+		.sorted { $0.key < $1.key }
+		.map { groupedDay in
+			(
+				date: groupedDay.key,
+				events: groupedDay.value.sorted { $0.startDate < $1.startDate }
+			)
+		}
 	}
 
 	/// Check if there are any events in the next 14 days

@@ -198,10 +198,10 @@ struct EventWidgetView: View {
 
 			for event in dayData.events {
 				let rowHeight = estimatedRowHeight(for: event)
-				let eventSpacing = dayEventsToShow.isEmpty ? 0 : eventSpacing
+				let rowSpacing = dayEventsToShow.isEmpty ? 0 : eventSpacing
 
-				if tempHeight >= eventSpacing + rowHeight {
-					tempHeight -= (eventSpacing + rowHeight)
+				if tempHeight >= rowSpacing + rowHeight {
+					tempHeight -= (rowSpacing + rowHeight)
 					dayEventsToShow.append(event)
 				} else {
 					break
@@ -274,7 +274,7 @@ struct EventWidgetView: View {
 
 	private func estimatedRowHeight(for event: WidgetEvent) -> CGFloat {
 		let titleHeight: CGFloat = 20
-		let timeHeight: CGFloat = event.isAllDay ? 0 : 16
+		let timeHeight: CGFloat = eventSecondaryText(for: event) == nil ? 0 : 16
 		let locationHeight: CGFloat = (event.location != nil && !event.location!.isEmpty) ? 16 : 0
 		let verticalPadding: CGFloat = 2
 
@@ -295,10 +295,10 @@ struct EventWidgetView: View {
 					.lineLimit(1)
 
 				VStack(alignment: .leading, spacing: 2) {
-					if !event.isAllDay {
+					if let secondaryText = eventSecondaryText(for: event) {
 						HStack(spacing: 2) {
-							Image(systemName: "clock")
-							Text(timeRangeText(for: event))
+							Image(systemName: eventSecondaryIcon(for: event))
+							Text(secondaryText)
 								.font(.system(size: 12))
 								.fixedSize(horizontal: true, vertical: false)
 						}
@@ -328,6 +328,33 @@ struct EventWidgetView: View {
 		let start = formatter.string(from: event.startDate)
 		let end = formatter.string(from: event.endDate)
 		return "\(start) - \(end)"
+	}
+
+	private func eventSecondaryText(for event: WidgetEvent) -> String? {
+		if event.spansMultipleDays() {
+			return dateRangeText(for: event)
+		}
+
+		if !event.isAllDay {
+			return timeRangeText(for: event)
+		}
+
+		return nil
+	}
+
+	private func eventSecondaryIcon(for event: WidgetEvent) -> String {
+		event.spansMultipleDays() ? "calendar" : "clock"
+	}
+
+	private func dateRangeText(for event: WidgetEvent) -> String {
+		let calendar = Calendar.current
+		let startDay = calendar.startOfDay(for: event.startDate)
+		let endDay = calendar.startOfDay(for: event.endDate.addingTimeInterval(-1))
+
+		let formatter = DateFormatter()
+		formatter.dateFormat = "d MMM"
+
+		return "\(formatter.string(from: startDay)) - \(formatter.string(from: endDay))"
 	}
 
 	// MARK: - Empty State View
