@@ -44,7 +44,7 @@ class CalendarService: ObservableObject {
 
 	/// Check if calendar access is authorized
 	var isAuthorized: Bool {
-		authorizationStatus == .fullAccess || authorizationStatus == .fullAccess
+		authorizationStatus == .fullAccess
 	}
 
 	/// Check if permission has been denied
@@ -52,29 +52,6 @@ class CalendarService: ObservableObject {
 		authorizationStatus == .denied || authorizationStatus == .restricted
 	}
 
-	/// Check if permission has not been requested yet
-	var isNotDetermined: Bool {
-		authorizationStatus == .notDetermined
-	}
-
-	/// Fetch today's events count (for display in main app)
-	func fetchTodayEventsCount() -> Int {
-		guard isAuthorized else { return 0 }
-
-		let calendar = Calendar.current
-		let now = Date()
-		let startOfDay = calendar.startOfDay(for: now)
-		let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-
-		let predicate = eventStore.predicateForEvents(
-			withStart: startOfDay,
-			end: endOfDay,
-			calendars: nil
-		)
-
-		let events = eventStore.events(matching: predicate)
-		return events.count
-	}
 }
 
 // MARK: - Authorization Status Helpers

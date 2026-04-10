@@ -19,63 +19,66 @@ struct MonthCalendarWidgetView: View {
 		let monthDays = monthDays(for: entry.date)
 		let weekdayInfo = orderedWeekdayInfo()
 
-		Spacer()
-		VStack(alignment: .leading, spacing: 2) {
-			HStack(alignment: .lastTextBaseline) {
-				Text(entry.date, format: .dateTime.month(.wide))
-					.font(.system(size: 16))
-					.fontWidth(.condensed)
-					.fontWeight(.bold)
-					.textCase(.uppercase)
-				Spacer()
-				Text(entry.date, format: .dateTime.year())
-					.font(.system(size: 10))
-					.fontWidth(.condensed)
-					.fontWeight(.light)
-			}
-
-			LazyVGrid(columns: columns, spacing: 0) {
-				ForEach(weekdayInfo) { day in
-					Text(day.symbol)
-						.font(.system(size: 9))
-						.fontDesign(.monospaced)
-						.foregroundStyle(.tertiary)
-						.frame(maxWidth: .infinity, minHeight: 14, maxHeight: 14)
+		Group {
+			Spacer()
+			VStack(alignment: .leading, spacing: 2) {
+				HStack(alignment: .lastTextBaseline) {
+					Text(entry.date, format: .dateTime.month(.wide))
+						.font(.system(size: 16))
+						.fontWidth(.condensed)
+						.fontWeight(.bold)
+						.textCase(.uppercase)
+					Spacer()
+					Text(entry.date, format: .dateTime.year())
+						.font(.system(size: 10))
+						.fontWidth(.condensed)
+						.fontWeight(.light)
 				}
-			}
 
-			LazyVGrid(columns: columns, spacing: 0) {
-				ForEach(Array(monthDays.enumerated()), id: \.offset) { _, day in
-					if let day = day {
-						ZStack {
-							Circle()
-								.fill(
-									renderingMode == .accented
-										? Color.white.opacity(0.25)
-										: renderingMode == .vibrant
-											? Color.white.opacity(0.5)
-											: Color.red
-								)
-								.widgetAccentable()
-								.opacity(day.isToday ? 1 : 0)
+				LazyVGrid(columns: columns, spacing: 0) {
+					ForEach(weekdayInfo) { day in
+						Text(day.symbol)
+							.font(.system(size: 9))
+							.fontDesign(.monospaced)
+							.foregroundStyle(.tertiary)
+							.frame(maxWidth: .infinity, minHeight: 14, maxHeight: 14)
+					}
+				}
 
-							Text(day.formatted())
-								.kerning(-0.5)
-								.font(.system(size: 10))
-								.fontWeight(day.isToday ? .semibold : .medium)
-								.monospacedDigit()
-								.foregroundStyle(day.isToday ? .white : .primary)
-						}
-						.frame(maxWidth: .infinity, minHeight: 16, maxHeight: 16)
-					} else {
-						Color.clear
+				LazyVGrid(columns: columns, spacing: 0) {
+					ForEach(Array(monthDays.enumerated()), id: \.offset) { _, day in
+						if let day = day {
+							ZStack {
+								Circle()
+									.fill(
+										renderingMode == .accented
+											? Color.white.opacity(0.25)
+											: renderingMode == .vibrant
+												? Color.white.opacity(0.5)
+												: Color.red
+									)
+									.widgetAccentable()
+									.opacity(day.isToday ? 1 : 0)
+									.padding(.leading, CGFloat(day.formatted().count) * 0.5)
+
+								Text(day.formatted())
+									.kerning(-0.5)
+									.font(.system(size: 10))
+									.fontWeight(day.isToday ? .semibold : .medium)
+									.monospacedDigit()
+									.foregroundStyle(day.isToday ? .white : .primary)
+							}
 							.frame(maxWidth: .infinity, minHeight: 16, maxHeight: 16)
+						} else {
+							Color.clear
+								.frame(maxWidth: .infinity, minHeight: 16, maxHeight: 16)
+						}
 					}
 				}
 			}
+			Spacer()
 		}
-		Spacer()
-			.widgetURL(URL(string: "smplwidgets://calendar"))
+		.widgetURL(URL(string: "smplwidgets://calendar"))
 	}
 }
 

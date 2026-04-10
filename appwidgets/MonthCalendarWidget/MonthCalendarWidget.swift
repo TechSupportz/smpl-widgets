@@ -28,7 +28,7 @@ struct MonthCalendarWidget: Widget {
 #Preview(as: .systemSmall) {
     MonthCalendarWidget()
 } timeline: {
-    MonthCalendarEntry(date: Calendar.current.date(byAdding: .month, value: -1, to: .now)!)
+	MonthCalendarEntry(date: Calendar.current.date(byAdding: .day, value: -1, to: .now)!)
     MonthCalendarEntry(date: .now)
     MonthCalendarEntry(date: Calendar.current.date(byAdding: .month, value: 1, to: .now)!)
 }

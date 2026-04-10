@@ -5,6 +5,7 @@
 //  Created by Nitish on 22/03/26.
 //
 
+import Photos
 import PhotosUI
 import SwiftUI
 
@@ -13,7 +14,7 @@ import SwiftUI
 #endif
 
 struct ImageWidgetSettingsCard: View {
-	let isAuthorized: Bool
+	let authorizationStatus: PHAuthorizationStatus
 	let isSaving: Bool
 	let slots: [ImageSlotMetadata]
 	let permissionButtonTitle: String
@@ -22,19 +23,54 @@ struct ImageWidgetSettingsCard: View {
 	var onPermissionTap: () -> Void
 	var onDeleteSlot: (ImageSlotMetadata) -> Void
 
+	private let slotListMaxHeight: CGFloat = 280
+
+	private var isAuthorized: Bool {
+		authorizationStatus == .authorized || authorizationStatus == .limited
+	}
+
 	private var statusIcon: String {
-		isAuthorized ? "photo.fill.on.rectangle.fill" : "photo"
+		switch authorizationStatus {
+		case .authorized, .limited:
+			return "photo.fill.on.rectangle.fill"
+		case .denied, .restricted:
+			return "photo.slash"
+		case .notDetermined:
+			return "photo"
+		@unknown default:
+			return "photo"
+		}
 	}
 
 	private var statusColor: Color {
-		isAuthorized ? .blue : .orange
+		switch authorizationStatus {
+		case .authorized, .limited:
+			return .blue
+		case .denied, .restricted:
+			return .red
+		case .notDetermined:
+			return .orange
+		@unknown default:
+			return .gray
+		}
 	}
 
 	private var statusText: String {
-		isAuthorized ? "Enabled for saved image slots" : "Not configured"
+		switch authorizationStatus {
+		case .authorized:
+			return "Enabled for saved image slots"
+		case .limited:
+			return "Limited photo access enabled"
+		case .denied:
+			return "Denied - Enable in Settings"
+		case .restricted:
+			return "Restricted by system"
+		case .notDetermined:
+			return "Not configured"
+		@unknown default:
+			return "Unknown status"
+		}
 	}
-
-	private let slotListMaxHeight: CGFloat = 280
 
 	private var displayedSlots: [ImageSlotMetadata] {
 		Array(slots.reversed())
@@ -185,7 +221,7 @@ private let mockSlots: [ImageSlotMetadata] = [
 
 #Preview("Not authorized") {
 	ImageWidgetSettingsCard(
-		isAuthorized: false,
+		authorizationStatus: .notDetermined,
 		isSaving: false,
 		slots: [],
 		permissionButtonTitle: "Enable Photos",
@@ -198,7 +234,7 @@ private let mockSlots: [ImageSlotMetadata] = [
 
 #Preview("Authorized - empty") {
 	ImageWidgetSettingsCard(
-		isAuthorized: true,
+		authorizationStatus: .authorized,
 		isSaving: false,
 		slots: [],
 		permissionButtonTitle: "Enable Photos",
@@ -211,7 +247,7 @@ private let mockSlots: [ImageSlotMetadata] = [
 
 #Preview("Authorized - with slots") {
 	ImageWidgetSettingsCard(
-		isAuthorized: true,
+		authorizationStatus: .authorized,
 		isSaving: false,
 		slots: mockSlots,
 		permissionButtonTitle: "Enable Photos",
@@ -224,7 +260,7 @@ private let mockSlots: [ImageSlotMetadata] = [
 
 #Preview("Saving in progress") {
 	ImageWidgetSettingsCard(
-		isAuthorized: true,
+		authorizationStatus: .authorized,
 		isSaving: true,
 		slots: mockSlots,
 		permissionButtonTitle: "Enable Photos",

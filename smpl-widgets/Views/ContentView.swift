@@ -79,6 +79,11 @@ struct ContentView: View {
 		}
 	}
 
+	private var isLocationDeniedOrRestricted: Bool {
+		locationService.authorizationStatus == .denied
+			|| locationService.authorizationStatus == .restricted
+	}
+
 	private var cachedLocationText: String {
 		guard let cachedLocation = SharedSettings.shared.lastKnownLocation else {
 			return "No cached location"
@@ -93,10 +98,6 @@ struct ContentView: View {
 			return "Open Settings"
 		}
 		return "Enable Photos"
-	}
-
-	private var imagePickerButtonsDisabled: Bool {
-		imageWidgetPhotoService.isSavingSlot
 	}
 
 	private var isPhotosDeniedOrRestricted: Bool {
@@ -137,10 +138,10 @@ struct ContentView: View {
 								subtitle: locationStatusText,
 								secondaryText: cachedLocationText,
 								showButton: !isLocationAuthorized,
-								buttonTitle: locationService.authorizationStatus == .denied
+								buttonTitle: isLocationDeniedOrRestricted
 									? "Open Settings" : "Enable Location",
 								buttonAction: {
-									if locationService.authorizationStatus == .denied {
+									if isLocationDeniedOrRestricted {
 										openSettings()
 									} else {
 										locationService.requestPermission()
@@ -173,6 +174,7 @@ struct ContentView: View {
 					}
 					.onAppear {
 						// Refresh status when view appears (e.g., returning from Settings)
+						locationService.refreshAuthorizationStatus()
 						calendarService.refreshStatus()
 						imageWidgetPhotoService.refreshAuthorizationStatus()
 						refreshImageSlots()
@@ -307,7 +309,7 @@ struct ContentView: View {
 
 	private func imageWidgetSettingsCard() -> some View {
 		ImageWidgetSettingsCard(
-			isAuthorized: imageWidgetPhotoService.isAuthorized,
+			authorizationStatus: imageWidgetPhotoService.authorizationStatus,
 			isSaving: imageWidgetPhotoService.isSavingSlot,
 			slots: imageSlots,
 			permissionButtonTitle: imageWidgetPermissionButtonTitle,

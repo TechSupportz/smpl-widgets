@@ -42,49 +42,6 @@ final class ImageWidgetPhotoService: ObservableObject {
 		authorizationStatus == .authorized || authorizationStatus == .limited
 	}
 
-	var statusText: String {
-		switch authorizationStatus {
-		case .authorized:
-			return "Enabled for saved image slots"
-		case .limited:
-			return "Limited photo access enabled"
-		case .denied:
-			return "Denied - Enable in Settings"
-		case .restricted:
-			return "Restricted by system"
-		case .notDetermined:
-			return "Not configured"
-		@unknown default:
-			return "Unknown status"
-		}
-	}
-
-	var statusIcon: String {
-		switch authorizationStatus {
-		case .authorized, .limited:
-			return "photo.fill.on.rectangle.fill"
-		case .denied, .restricted:
-			return "photo.slash"
-		case .notDetermined:
-			return "photo"
-		@unknown default:
-			return "photo"
-		}
-	}
-
-	var statusColor: Color {
-		switch authorizationStatus {
-		case .authorized, .limited:
-			return .blue
-		case .denied, .restricted:
-			return .red
-		case .notDetermined:
-			return .orange
-		@unknown default:
-			return .gray
-		}
-	}
-
 	func refreshAuthorizationStatus() {
 		authorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
 	}

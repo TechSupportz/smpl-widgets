@@ -92,8 +92,9 @@ class LocationFetcher: NSObject, CLLocationManagerDelegate {
 
 			group.addTask {
 				try await Task.sleep(nanoseconds: self.locationTimeoutSeconds * 1_000_000_000)
-				self.logger.warning("Location request timed out after \(self.locationTimeoutSeconds)s")
-				throw CLError(.locationUnknown)
+				let timeoutError = CLError(.locationUnknown)
+				await self.failPendingRequests(with: timeoutError)
+				throw timeoutError
 			}
 
 			guard let result = try await group.next() else {
@@ -102,6 +103,15 @@ class LocationFetcher: NSObject, CLLocationManagerDelegate {
 			group.cancelAll()
 			return result
 		}
+	}
+
+	private func failPendingRequests(with error: Error) {
+		guard !continuations.isEmpty else {
+			return
+		}
+
+		logger.warning("Location request timed out after \(self.locationTimeoutSeconds)s")
+		resumeAllContinuations(with: .failure(error))
 	}
 
 	private func requestLocationAsync() async throws -> CLLocation {
@@ -153,15 +163,17 @@ class LocationFetcher: NSObject, CLLocationManagerDelegate {
 		Task { @MainActor in
 			logger.error("Location request failed: \(error.localizedDescription)")
 
-		// First try in-memory cache
-		if let lastLocation = manager.location,
-			lastLocation.timestamp.timeIntervalSinceNow > -fallbackLocationMaxAge
-		{
-			logger.info("Using fallback cached location (age: \(-lastLocation.timestamp.timeIntervalSinceNow)s)")
-			savePersistedLocation(lastLocation)
-			resumeAllContinuations(with: .success(lastLocation))
-			return
-		}
+			// First try in-memory cache
+			if let lastLocation = manager.location,
+				lastLocation.timestamp.timeIntervalSinceNow > -fallbackLocationMaxAge
+			{
+				logger.info(
+					"Using fallback cached location (age: \(-lastLocation.timestamp.timeIntervalSinceNow)s)"
+				)
+				savePersistedLocation(lastLocation)
+				resumeAllContinuations(with: .success(lastLocation))
+				return
+			}
 			
 			// Then try persistent cache
 			if let persistedLocation = loadPersistedLocation(),

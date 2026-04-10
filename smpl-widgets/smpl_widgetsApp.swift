@@ -10,6 +10,10 @@ import SwiftUI
 import WidgetKit
 import os
 
+#if canImport(UIKit)
+	import UIKit
+#endif
+
 @main
 struct smpl_widgetsApp: App {
 	@State private var isRedirecting = false

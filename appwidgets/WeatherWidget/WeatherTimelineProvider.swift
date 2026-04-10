@@ -68,11 +68,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 					to: currentDate
 				)!
 
-				var errorCondition = "error"
-
-				if error.localizedDescription.contains("kCLErrorDomain") {
-					errorCondition += ",location"
-				}
+				let errorCondition = isLocationError(error) ? "error,location" : "error"
 
 				let errorEntry = WeatherEntry(
 					date: currentDate,
@@ -194,5 +190,14 @@ struct WeatherTimelineProvider: TimelineProvider {
 		}
 
 		return entries
+	}
+
+	private func isLocationError(_ error: Error) -> Bool {
+		if error is CLError {
+			return true
+		}
+
+		let nsError = error as NSError
+		return nsError.domain == kCLErrorDomain
 	}
 }
