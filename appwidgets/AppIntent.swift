@@ -6,7 +6,7 @@
 //
 
 import AppIntents
-import EventKit
+@preconcurrency import EventKit
 import Foundation
 import WidgetKit
 
@@ -86,28 +86,30 @@ struct CalendarEntity: AppEntity {
 }
 
 struct CalendarEntityQuery: EntityQuery {
-	private let eventStore = EKEventStore()
-
 	func entities(for identifiers: [String]) async throws -> [CalendarEntity] {
+		let availableCalendars = await availableCalendars()
 		let calendarsByID = Dictionary(
-			uniqueKeysWithValues: availableCalendars().map { ($0.calendarIdentifier, $0) }
+			uniqueKeysWithValues: availableCalendars.map { ($0.id, $0) }
 		)
 
 		return identifiers.compactMap { identifier in
-			guard let calendar = calendarsByID[identifier] else {
+			guard let calendarEntity = calendarsByID[identifier] else {
 				return nil
 			}
 
-			return CalendarEntity(calendar: calendar)
+			return calendarEntity
 		}
 	}
 
 	func suggestedEntities() async throws -> [CalendarEntity] {
-		availableCalendars().map(CalendarEntity.init(calendar:))
+		await availableCalendars()
 	}
 
-	private func availableCalendars() -> [EKCalendar] {
-		eventStore.calendars(for: .event)
+	@MainActor
+	private func availableCalendars() -> [CalendarEntity] {
+		let eventStore = EKEventStore()
+		
+		return eventStore.calendars(for: .event)
 			.sorted { first, second in
 				let titleComparison = first.title.localizedCaseInsensitiveCompare(second.title)
 
@@ -118,6 +120,7 @@ struct CalendarEntityQuery: EntityQuery {
 
 				return titleComparison == .orderedAscending
 			}
+			.map(CalendarEntity.init(calendar:))
 	}
 }
 

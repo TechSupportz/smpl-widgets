@@ -14,8 +14,6 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 	typealias Entry = EventEntry
 	typealias Intent = EventConfigurationIntent
 
-	private let eventStore = EKEventStore()
-
 	func placeholder(in context: Context) -> EventEntry {
 		EventEntry(date: Date(), events: Self.sampleEvents, authState: .authorized)
 	}
@@ -115,6 +113,7 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		let now = Date()
 		let startOfDay = calendar.startOfDay(for: now)
 		let endOfWeek = calendar.date(byAdding: .day, value: 15, to: startOfDay)!
+		let eventStore = EKEventStore()
 
 		let predicate = eventStore.predicateForEvents(
 			withStart: startOfDay,
@@ -132,6 +131,8 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		guard !selectedCalendarIDs.isEmpty else {
 			return nil
 		}
+
+		let eventStore = EKEventStore()
 
 		return eventStore.calendars(for: .event)
 			.filter { selectedCalendarIDs.contains($0.calendarIdentifier) }
