@@ -5,9 +5,13 @@
 //  Created by Nitish on 01/13/26.
 //
 
-import EventKit
 import SwiftUI
 import WidgetKit
+import EventKit
+
+#if canImport(UIKit)
+	import UIKit
+#endif
 
 /// Authorization state for the widget to display appropriate UI
 enum CalendarAuthState {
@@ -40,6 +44,7 @@ struct WidgetEvent: Identifiable {
 	let endDate: Date
 	let isAllDay: Bool
 	let location: String?
+	let calendarColor: Color
 
 	init(from ekEvent: EKEvent) {
 		self.id = ekEvent.eventIdentifier ?? UUID().uuidString
@@ -48,6 +53,7 @@ struct WidgetEvent: Identifiable {
 		self.endDate = ekEvent.endDate
 		self.isAllDay = ekEvent.isAllDay
 		self.location = ekEvent.location
+		self.calendarColor = Self.calendarColor(for: ekEvent.calendar)
 	}
 
 	/// Initializer for previews and placeholders
@@ -66,6 +72,7 @@ struct WidgetEvent: Identifiable {
 		self.endDate = endDate
 		self.isAllDay = isAllDay
 		self.location = location
+		self.calendarColor = calendarColor
 	}
 
 	// MARK: - Event State Logic
@@ -87,19 +94,22 @@ struct WidgetEvent: Identifiable {
 	}
 
 	func pillColor(at date: Date) -> Color {
-		if isAllDay {
-			// All-day events are always blue unless day is over (handled by filtering)
-			return .blue
-		}
-
 		switch state(at: date) {
 		case .upcoming:
-			return Color.gray.opacity(0.3)
-		case .inProgress:
-			return .orange
-		case .recentlyEnded:
-			return .green
+			return calendarColor.opacity(0.5)
+		case .inProgress, .recentlyEnded:
+			return calendarColor
 		}
+	}
+
+	private static func calendarColor(for calendar: EKCalendar) -> Color {
+		#if canImport(UIKit)
+			if let cgColor = calendar.cgColor {
+				return Color(uiColor: UIColor(cgColor: cgColor))
+			}
+		#endif
+
+		return .blue
 	}
 }
 
@@ -116,7 +126,10 @@ struct EventEntry: TimelineEntry {
 	}
 
 	var todayEventCount: Int {
-		events.count(where: { $0.startDate.startOfDay == date.startOfDay })
+		let calendar = Calendar.current
+		let today = calendar.startOfDay(for: date)
+
+		return events.count(where: { calendar.startOfDay(for: $0.startDate) == today })
 	}
 
 	var eventCount: Int {

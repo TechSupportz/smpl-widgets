@@ -5,45 +5,38 @@
 //  Created by Nitish on 01/13/26.
 //
 
-import EventKit
 import SwiftUI
 import WidgetKit
-import os
+import AppIntents
+import EventKit
 
-struct EventTimelineProvider: TimelineProvider {
-	private let logger = Logger(
-		subsystem: "com.tnitish.smpl-widgets.appwidgets", category: "EventWidget")
+struct EventTimelineProvider: AppIntentTimelineProvider {
+	typealias Entry = EventEntry
+	typealias Intent = EventConfigurationIntent
+
 	private let eventStore = EKEventStore()
 
 	func placeholder(in context: Context) -> EventEntry {
 		EventEntry(date: Date(), events: Self.sampleEvents, authState: .authorized)
 	}
 
-	func getSnapshot(
-		in context: Context,
-		completion: @escaping @Sendable (EventEntry) -> Void
-	) {
+	func snapshot(for configuration: EventConfigurationIntent, in context: Context) async -> EventEntry {
 		if context.isPreview {
-			completion(
-				EventEntry(date: Date(), events: Self.sampleUpcomingEvents, authState: .authorized))
-			return
+			return EventEntry(date: Date(), events: Self.sampleUpcomingEvents, authState: .authorized)
 		}
 
 		let status = EKEventStore.authorizationStatus(for: .event)
 		let authState = CalendarAuthState(from: status)
 
 		if authState == .authorized {
-			let upcomingEvents = fetchUpcomingEvents()
-			completion(EventEntry(date: Date(), events: upcomingEvents, authState: authState))
+			let upcomingEvents = fetchUpcomingEvents(for: configuration)
+			return EventEntry(date: Date(), events: upcomingEvents, authState: authState)
 		} else {
-			completion(EventEntry(date: Date(), events: [], authState: authState))
+			return EventEntry(date: Date(), events: [], authState: authState)
 		}
 	}
 
-	func getTimeline(
-		in context: Context,
-		completion: @escaping @Sendable (Timeline<EventEntry>) -> Void
-	) {
+	func timeline(for configuration: EventConfigurationIntent, in context: Context) async -> Timeline<EventEntry> {
 		let currentDate = Date()
 
 		let status = EKEventStore.authorizationStatus(for: .event)
@@ -51,7 +44,7 @@ struct EventTimelineProvider: TimelineProvider {
 
 		switch authState {
 		case .authorized:
-			let upcomingEvents = fetchUpcomingEvents()
+			let upcomingEvents = fetchUpcomingEvents(for: configuration)
 
 			// Calculate update dates based on event start/end times and 10-min post-end buffer
 			var updateDates: Set<Date> = []
@@ -101,53 +94,47 @@ struct EventTimelineProvider: TimelineProvider {
 			}
 
 			// Use .atEnd policy so widget requests new timeline after the last entry
-			completion(Timeline(entries: entries, policy: .atEnd))
+			return Timeline(entries: entries, policy: .atEnd)
 
 		case .notDetermined:
 			let entry = EventEntry(date: currentDate, events: [], authState: authState)
 			// Check again in 15 minutes in case user grants permission
 			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate)!
-			completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+			return Timeline(entries: [entry], policy: .after(nextUpdate))
 
 		case .denied, .restricted:
 			let entry = EventEntry(date: currentDate, events: [], authState: authState)
 			// Check again in 1 hour in case user changes settings
 			let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!
-			completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+			return Timeline(entries: [entry], policy: .after(nextUpdate))
 		}
 	}
 
-	private func fetchTodayEvents() -> [WidgetEvent] {
+	private func fetchUpcomingEvents(for configuration: EventConfigurationIntent) -> [WidgetEvent] {
 		let calendar = Calendar.current
 		let now = Date()
 		let startOfDay = calendar.startOfDay(for: now)
-		let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-
-		let predicate = eventStore.predicateForEvents(
-			withStart: startOfDay,
-			end: endOfDay,
-			calendars: nil
-		)
-
-		let ekEvents = eventStore.events(matching: predicate)
-
-		return ekEvents.map { WidgetEvent(from: $0) }
-	}
-
-	private func fetchUpcomingEvents() -> [WidgetEvent] {
-		let calendar = Calendar.current
-		let now = Date()
-		let startOfDay = calendar.startOfDay(for: now)
-        let endOfWeek = calendar.date(byAdding: .day, value: 15, to: startOfDay)!
+		let endOfWeek = calendar.date(byAdding: .day, value: 15, to: startOfDay)!
 
 		let predicate = eventStore.predicateForEvents(
 			withStart: startOfDay,
 			end: endOfWeek,
-			calendars: nil
+			calendars: selectedCalendars(for: configuration)
 		)
 
 		let ekEvents = eventStore.events(matching: predicate)
 		return ekEvents.map { WidgetEvent(from: $0) }
+	}
+
+	private func selectedCalendars(for configuration: EventConfigurationIntent) -> [EKCalendar]? {
+		let selectedCalendarIDs = Set(configuration.calendars?.map(\.id) ?? [])
+
+		guard !selectedCalendarIDs.isEmpty else {
+			return nil
+		}
+
+		return eventStore.calendars(for: .event)
+			.filter { selectedCalendarIDs.contains($0.calendarIdentifier) }
 	}
 
 	// MARK: - Sample Data for Previews

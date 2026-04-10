@@ -12,8 +12,9 @@ struct EventWidget: Widget {
 	let kind: String = "EventWidget"
 
 	var body: some WidgetConfiguration {
-		StaticConfiguration(
+		AppIntentConfiguration(
 			kind: kind,
+			intent: EventConfigurationIntent.self,
 			provider: EventTimelineProvider()
 		) { entry in
 			EventWidgetView(entry: entry)
