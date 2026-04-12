@@ -5,10 +5,10 @@
 //  Created by Nitish on 01/13/26.
 //
 
-import SwiftUI
-import WidgetKit
 import AppIntents
 import EventKit
+import SwiftUI
+import WidgetKit
 
 struct EventTimelineProvider: AppIntentTimelineProvider {
 	typealias Entry = EventEntry
@@ -18,9 +18,12 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		EventEntry(date: Date(), events: Self.sampleEvents, authState: .authorized)
 	}
 
-	func snapshot(for configuration: EventConfigurationIntent, in context: Context) async -> EventEntry {
+	func snapshot(
+		for configuration: EventConfigurationIntent, in context: Context
+	) async -> EventEntry {
 		if context.isPreview {
-			return EventEntry(date: Date(), events: Self.sampleUpcomingEvents, authState: .authorized)
+			return EventEntry(
+				date: Date(), events: Self.sampleUpcomingEvents, authState: .authorized)
 		}
 
 		let status = EKEventStore.authorizationStatus(for: .event)
@@ -34,7 +37,9 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		}
 	}
 
-	func timeline(for configuration: EventConfigurationIntent, in context: Context) async -> Timeline<EventEntry> {
+	func timeline(
+		for configuration: EventConfigurationIntent, in context: Context
+	) async -> Timeline<EventEntry> {
 		let currentDate = Date()
 
 		let status = EKEventStore.authorizationStatus(for: .event)
@@ -143,46 +148,54 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 	static var sampleEvents: [WidgetEvent] {
 		let now = Date()
 		let calendar = Calendar.current
+		let startOfToday = calendar.startOfDay(for: now)
+		let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
 
 		return [
 			WidgetEvent(
 				title: "Team Standup",
-				startDate: calendar.date(bySettingHour: 21, minute: 0, second: 0, of: now)!,
-				endDate: calendar.date(bySettingHour: 22, minute: 30, second: 0, of: now)!,
+				startDate: startOfToday,
+				endDate: startOfTomorrow,
 				isAllDay: true,
 				calendarColor: .blue
 			),
 			WidgetEvent(
+				title: "Focus Time",
+				startDate: calendar.date(bySettingHour: 18, minute: 0, second: 0, of: now)!,
+				endDate: calendar.date(bySettingHour: 19, minute: 0, second: 0, of: now)!,
+				isAllDay: false,
+				calendarColor: .mint
+			),
+			WidgetEvent(
 				title: "Lunch with Alex",
 				startDate: calendar.date(bySettingHour: 20, minute: 0, second: 0, of: now)!,
-				endDate: calendar.date(bySettingHour: 22, minute: 0, second: 0, of: now)!,
+				endDate: calendar.date(bySettingHour: 21, minute: 0, second: 0, of: now)!,
 				isAllDay: false,
 				calendarColor: .green
 			),
-			//			WidgetEvent(
-			//				title: "Project Review",
-			//				startDate: calendar.date(bySettingHour: 22, minute: 0, second: 0, of: now)!,
-			//				endDate: calendar.date(bySettingHour: 23, minute: 0, second: 0, of: now)!,
-			//				isAllDay: false,
-			//				location: nil,
-			//				calendarColor: .orange
-			//			),
-			//			WidgetEvent(
-			//				title: "Client Meeting",
-			//				startDate: calendar.date(bySettingHour: 22, minute: 0, second: 0, of: now)!,
-			//				endDate: calendar.date(bySettingHour: 23, minute: 0, second: 0, of: now)!,
-			//				isAllDay: false,
-			//				location: "Conference Room A",
-			//				calendarColor: .purple
-			//			),
-			//			WidgetEvent(
-			//				title: "Design Sync",
-			//				startDate: calendar.date(bySettingHour: 23, minute: 30, second: 0, of: now)!,
-			//				endDate: calendar.date(bySettingHour: 23, minute: 45, second: 0, of: now)!,
-			//				isAllDay: false,
-			//				location: "Zoom",
-			//				calendarColor: .red
-			//			),
+			WidgetEvent(
+				title: "Project Review",
+				startDate: calendar.date(bySettingHour: 21, minute: 0, second: 0, of: now)!,
+				endDate: calendar.date(bySettingHour: 22, minute: 0, second: 0, of: now)!,
+				isAllDay: false,
+				calendarColor: .orange
+			),
+			WidgetEvent(
+				title: "Client Meeting",
+				startDate: calendar.date(bySettingHour: 21, minute: 30, second: 0, of: now)!,
+				endDate: calendar.date(bySettingHour: 22, minute: 30, second: 0, of: now)!,
+				isAllDay: false,
+				location: "Conference Room A",
+				calendarColor: .purple
+			),
+			WidgetEvent(
+				title: "Design Sync",
+				startDate: calendar.date(bySettingHour: 23, minute: 0, second: 0, of: now)!,
+				endDate: calendar.date(bySettingHour: 23, minute: 30, second: 0, of: now)!,
+				isAllDay: false,
+				location: "Zoom",
+				calendarColor: .red
+			),
 		]
 	}
 
@@ -192,6 +205,8 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		let today = calendar.startOfDay(for: now)
 		let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
 		let dayAfterTomorrow = calendar.date(byAdding: .day, value: 2, to: today)!
+		let day3 = calendar.date(byAdding: .day, value: 3, to: today)!
+		let day5 = calendar.date(byAdding: .day, value: 5, to: today)!
 
 		return sampleEvents + [
 			WidgetEvent(
@@ -202,22 +217,36 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 				calendarColor: .green
 			),
 			WidgetEvent(
-				title: "Quarterly Planning",
-				startDate: calendar.date(
-					bySettingHour: 10, minute: 0, second: 0, of: dayAfterTomorrow)!,
-				endDate:
-					calendar
-					.date(bySettingHour: 12, minute: 0, second: 0, of: dayAfterTomorrow)!,
+				title: "Sprint Planning",
+				startDate: calendar.date(bySettingHour: 10, minute: 0, second: 0, of: tomorrow)!,
+				endDate: calendar.date(bySettingHour: 11, minute: 30, second: 0, of: tomorrow)!,
 				isAllDay: false,
 				calendarColor: .blue
 			),
-			//			WidgetEvent(
-			//				title: "Dentist Appointment",
-			//				startDate: calendar.date(bySettingHour: 14, minute: 0, second: 0, of: calendar.date(byAdding: .day, value: 6, to: today)!)!,
-			//				endDate: calendar.date(bySettingHour: 15, minute: 0, second: 0, of: calendar.date(byAdding: .day, value: 6, to: today)!)!,
-			//				isAllDay: false,
-			//				calendarColor: .red
-			//			),
+			WidgetEvent(
+				title: "Quarterly Planning",
+				startDate: calendar.date(
+					bySettingHour: 10, minute: 0, second: 0, of: dayAfterTomorrow)!,
+				endDate: calendar.date(
+					bySettingHour: 12, minute: 0, second: 0, of: dayAfterTomorrow)!,
+				isAllDay: false,
+				calendarColor: .blue
+			),
+			WidgetEvent(
+				title: "Team Lunch",
+				startDate: calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day3)!,
+				endDate: calendar.date(bySettingHour: 13, minute: 0, second: 0, of: day3)!,
+				isAllDay: false,
+				location: "The Noodle Place",
+				calendarColor: .orange
+			),
+			WidgetEvent(
+				title: "Dentist Appointment",
+				startDate: calendar.date(bySettingHour: 14, minute: 0, second: 0, of: day5)!,
+				endDate: calendar.date(bySettingHour: 15, minute: 0, second: 0, of: day5)!,
+				isAllDay: false,
+				calendarColor: .red
+			),
 		]
 	}
 }

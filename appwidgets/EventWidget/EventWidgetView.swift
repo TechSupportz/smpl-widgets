@@ -12,14 +12,16 @@ struct EventWidgetView: View {
 	var entry: EventEntry
 	@Environment(\.widgetFamily) var widgetFamily
 
+	private struct EventSectionData: Identifiable {
+		let id: String
+		let header: String
+		let events: [WidgetEvent]
+	}
+
 	var body: some View {
 		VStack(spacing: 0) {
 			if entry.isAuthorized {
-				if widgetFamily == .systemMedium {
-					mediumLayoutView
-				} else {
-					smallLayoutView
-				}
+				authorizedLayoutView
 			} else {
 				permissionRequiredView
 			}
@@ -30,12 +32,20 @@ struct EventWidgetView: View {
 		.widgetURL(widgetURL)
 	}
 
-	private var widgetURL: URL {
-		if entry.isAuthorized {
-			return URL(string: "smplwidgets://events")!
-		} else {
-			return URL(string: "smplwidgets://permissions")!
+	@ViewBuilder
+	private var authorizedLayoutView: some View {
+		switch widgetFamily {
+		case .systemLarge:
+			largeLayoutView
+		case .systemMedium:
+			mediumLayoutView
+		default:
+			smallLayoutView
 		}
+	}
+
+	private var widgetURL: URL {
+		URL(string: entry.isAuthorized ? "smplwidgets://events" : "smplwidgets://permissions")!
 	}
 
 	// MARK: - Small Layout
@@ -52,15 +62,14 @@ struct EventWidgetView: View {
 
 	private var smallEventsListView: some View {
 		GeometryReader { geometry in
-			let eventsToShow = eventsToDisplay(
-				in: geometry.size.height, from: entry.displayableEvents)
+			let eventsToShow = fittingEvents(
+				in: geometry.size.height,
+				from: entry.displayableEvents
+			).events
 
-			VStack(alignment: .leading, spacing: eventSpacing) {
-				ForEach(eventsToShow) { event in
-					eventRow(event)
-				}
+			columnContentView {
+				eventRowsView(eventsToShow)
 			}
-			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 		}
 		.clipped()
 	}
@@ -70,174 +79,147 @@ struct EventWidgetView: View {
 	private var mediumLayoutView: some View {
 		let todayEvents = entry.todayDisplayableEvents
 		let hasUpcomingEvents = !entry.upcomingDaysEvents.isEmpty
-		let hasNoEventsAtAll = todayEvents.isEmpty && !hasUpcomingEvents
 
-		// Scenario 3: No events at all - show centered empty state
-		if hasNoEventsAtAll {
-			return AnyView(emptyStateView)
+		return twoColumnLayoutView(isEmpty: todayEvents.isEmpty && !hasUpcomingEvents) { height in
+			mediumLeftColumn(height: height)
+		} right: { height in
+			mediumRightColumn(height: height)
 		}
-
-		// Scenarios 1 & 2: Show two-column layout
-		return AnyView(
-			GeometryReader { geometry in
-				HStack(spacing: 0) {
-					// Left column: Today's events or "All done for today"
-					mediumLeftColumn(height: geometry.size.height)
-					// Right column: Overflow + upcoming events
-					mediumRightColumn(height: geometry.size.height)
-				}
-			}
-		)
 	}
 
 	private func mediumLeftColumn(height: CGFloat) -> some View {
-		let todayEvents = entry.todayDisplayableEvents
-		let eventsToShow = eventsToDisplay(in: height, from: todayEvents)
+		let eventsToShow = fittingEvents(in: height, from: entry.todayDisplayableEvents).events
 
-		return VStack(alignment: .leading, spacing: eventSpacing) {
+		return columnContentView {
 			if eventsToShow.isEmpty {
-				// Scenario 1: No events today but has upcoming
-				Spacer()
-				Text("All done\nfor today")
-					.font(.system(size: 18))
-					.foregroundStyle(.secondary)
-					.multilineTextAlignment(.center)
-					.padding(.trailing, 16)
-					.frame(maxWidth: .infinity)
-
-				Spacer()
+				centeredSecondaryMessage("All done\nfor today", fontSize: 18, trailingPadding: 16)
 			} else {
-				// Show today's events
-				ForEach(eventsToShow) { event in
-					eventRow(event)
-				}
+				eventRowsView(eventsToShow)
 			}
 		}
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-		.clipped()
 	}
 
 	private func mediumRightColumn(height: CGFloat) -> some View {
-		let todayEvents = entry.todayDisplayableEvents
-		let leftEvents = eventsToDisplay(in: height, from: todayEvents)
-		let overflowEvents = Array(todayEvents.dropFirst(leftEvents.count))
-		let upcomingDays = entry.upcomingDaysEvents
+		let leftEvents = fittingEvents(in: height, from: entry.todayDisplayableEvents).events
+		let overflowEvents = Array(entry.todayDisplayableEvents.dropFirst(leftEvents.count))
 
-		// Calculate what fits in the right column
-		let rightContent = calculateRightColumnContent(
-			height: height,
-			overflowEvents: overflowEvents,
-			upcomingDays: upcomingDays
+		return upcomingEventsColumn(height: height, overflowEvents: overflowEvents)
+	}
+
+	// MARK: - Large Layout
+
+	private var largeLayoutView: some View {
+		return twoColumnLayoutView(
+			isEmpty: entry.todayDisplayableEvents.isEmpty && entry.upcomingDaysEvents.isEmpty
+		) { height in
+			largeLeftColumn(height: height)
+		} right: { height in
+			largeRightColumn(height: height)
+		}
+	}
+
+	private func largeLeftColumn(height: CGFloat) -> some View {
+		let allDayEvents = entry.todayDisplayableEvents.filter {
+			$0.isAllDay || $0.spansMultipleDays()
+		}
+		let timedEvents = entry.todayDisplayableEvents.filter {
+			!$0.isAllDay && !$0.spansMultipleDays()
+		}
+		let fittedSections = fittingSections(
+			in: height - totalHeight(for: allDayEvents),
+			from: hourlySections(from: timedEvents),
+			hasLeadingContent: !allDayEvents.isEmpty
 		)
 
-		return VStack(alignment: .leading, spacing: eventSpacing) {
-			// Show overflow from today first (without date header)
-			ForEach(rightContent.overflowEvents) { event in
-				eventRow(event)
-			}
-
-			// Show upcoming days that fit
-			ForEach(rightContent.days.indices, id: \.self) { index in
-				let dayData = rightContent.days[index]
-				daySection(date: dayData.date, events: dayData.events)
-			}
-
-			// Scenario 2: Has events today, no upcoming events
-			if rightContent.overflowEvents.isEmpty && rightContent.days.isEmpty {
-				Spacer()
-				Text("No upcoming events")
-					.font(.system(size: 14))
-					.foregroundStyle(.secondary)
-					.multilineTextAlignment(.center)
-					.frame(maxWidth: .infinity)
-				Spacer()
-			}
-		}
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-		.clipped()
-	}
-
-	private func calculateRightColumnContent(
-		height: CGFloat,
-		overflowEvents: [WidgetEvent],
-		upcomingDays: [(date: Date, events: [WidgetEvent])]
-	) -> (overflowEvents: [WidgetEvent], days: [(date: Date, events: [WidgetEvent])]) {
-		var remainingHeight = height
-		var selectedOverflowEvents: [WidgetEvent] = []
-		var selectedDays: [(date: Date, events: [WidgetEvent])] = []
-
-		// First, add overflow events from today (no date header needed)
-		for event in overflowEvents {
-			let rowHeight = estimatedRowHeight(for: event)
-			let spacing = selectedOverflowEvents.isEmpty ? 0 : eventSpacing
-
-			if remainingHeight >= spacing + rowHeight {
-				remainingHeight -= (spacing + rowHeight)
-				selectedOverflowEvents.append(event)
+		return columnContentView {
+			if allDayEvents.isEmpty && timedEvents.isEmpty {
+				centeredSecondaryMessage("All done\nfor today", fontSize: 18, trailingPadding: 16)
 			} else {
-				break
-			}
-		}
+				VStack(alignment: .leading, spacing: 0) {
+					if !allDayEvents.isEmpty {
+						eventRowsView(allDayEvents)
+					}
 
-		// Then, add upcoming days with their date headers
-		let dateHeaderHeight: CGFloat = 10 // Approximate height of date header
-		let sectionSpacing: CGFloat = 6 // Spacing between day sections
-
-		for dayData in upcomingDays {
-			// Check if we can fit the date header
-			let needsSectionSpacing = !selectedOverflowEvents.isEmpty || !selectedDays.isEmpty
-			let spacingBeforeHeader = needsSectionSpacing ? sectionSpacing : 0
-
-			if remainingHeight < spacingBeforeHeader + dateHeaderHeight {
-				break
-			}
-
-			// Calculate how many events from this day can fit
-			var dayEventsToShow: [WidgetEvent] = []
-			var tempHeight = remainingHeight - spacingBeforeHeader - dateHeaderHeight
-
-			for event in dayData.events {
-				let rowHeight = estimatedRowHeight(for: event)
-				let rowSpacing = dayEventsToShow.isEmpty ? 0 : eventSpacing
-
-				if tempHeight >= rowSpacing + rowHeight {
-					tempHeight -= (rowSpacing + rowHeight)
-					dayEventsToShow.append(event)
-				} else {
-					break
+					if !fittedSections.isEmpty {
+						sectionListView(fittedSections)
+							.padding(.top, allDayEvents.isEmpty ? 0 : sectionSpacing)
+					} else if timedEvents.isEmpty {
+						Spacer()
+					}
 				}
 			}
-
-			// Only add this day if we can show at least one event
-			if !dayEventsToShow.isEmpty {
-				remainingHeight = tempHeight
-				selectedDays.append((date: dayData.date, events: dayEventsToShow))
-			}
 		}
-
-		return (overflowEvents: selectedOverflowEvents, days: selectedDays)
 	}
 
-	private func daySection(date: Date, events: [WidgetEvent]) -> some View {
+	private func largeRightColumn(height: CGFloat) -> some View {
+		upcomingEventsColumn(height: height, overflowEvents: [])
+	}
+
+	// MARK: - Hour Timeline Helpers
+
+	private func groupEventsByHour(_ events: [WidgetEvent]) -> [(hour: Int, events: [WidgetEvent])] {
+		let calendar = Calendar.current
+		let grouped = Dictionary(grouping: events) { event in
+			calendar.component(.hour, from: event.startDate)
+		}
+
+		return grouped.sorted { $0.key < $1.key }
+			.map { (hour: $0.key, events: $0.value.sorted { $0.startDate < $1.startDate }) }
+	}
+
+	private func hourlySections(from events: [WidgetEvent]) -> [EventSectionData] {
+		groupEventsByHour(events).map { group in
+			EventSectionData(
+				id: "hour-\(group.hour)",
+				header: hourHeaderText(for: group.hour),
+				events: group.events
+			)
+		}
+	}
+
+	private func hourHeaderText(for hour: Int) -> String {
+		String(format: "%02d:00", hour)
+	}
+
+	// MARK: - Shared Day Section
+
+	private func upcomingDaySections(
+		from upcomingDays: [(date: Date, events: [WidgetEvent])]
+	) -> [EventSectionData] {
+		upcomingDays.map { day in
+			EventSectionData(
+				id: "day-\(Int(day.date.timeIntervalSince1970))",
+				header: dateHeaderText(for: day.date),
+				events: day.events
+			)
+		}
+	}
+
+	private func sectionListView(_ sections: [EventSectionData]) -> some View {
+		VStack(alignment: .leading, spacing: sectionSpacing) {
+			ForEach(sections) { section in
+				sectionView(section)
+			}
+		}
+	}
+
+	private func sectionView(_ section: EventSectionData) -> some View {
 		VStack(alignment: .leading, spacing: 4) {
-			// Date header with divider
-			HStack(spacing: 4) {
-				Text(dateHeaderText(for: date))
-					.font(.system(size: 10, weight: .medium))
-					.italic()
-					.foregroundStyle(.primary)
+			sectionHeaderView(section.header)
+			eventRowsView(section.events)
+		}
+	}
 
-				Rectangle()
-					.fill(Color.gray.opacity(0.4))
-					.frame(height: 1)
-			}
+	private func sectionHeaderView(_ title: String) -> some View {
+		HStack(spacing: 4) {
+			Text(title)
+				.font(.system(size: 10, weight: .medium))
+				.italic()
+				.foregroundStyle(.primary)
 
-			// Events for this day
-			VStack(alignment: .leading, spacing: eventSpacing) {
-				ForEach(events) { event in
-					eventRow(event)
-				}
-			}
+			Rectangle()
+				.fill(Color.gray.opacity(0.4))
+				.frame(height: 1)
 		}
 	}
 
@@ -250,26 +232,144 @@ struct EventWidgetView: View {
 	// MARK: - Events List Logic
 
 	private let eventSpacing: CGFloat = 6
+	private let sectionHeaderHeight: CGFloat = 10
+	private let sectionSpacing: CGFloat = 6
 
-	private func eventsToDisplay(
-		in availableHeight: CGFloat, from events: [WidgetEvent]
-	) -> [WidgetEvent] {
-		var totalHeight: CGFloat = 0
+	private func fittingEvents(
+		in availableHeight: CGFloat,
+		from events: [WidgetEvent]
+	) -> (events: [WidgetEvent], usedHeight: CGFloat) {
+		var usedHeight: CGFloat = 0
 		var result: [WidgetEvent] = []
 
 		for event in events {
 			let rowHeight = estimatedRowHeight(for: event)
 			let spacing = result.isEmpty ? 0 : eventSpacing
 
-			if totalHeight + spacing + rowHeight <= availableHeight {
-				totalHeight += spacing + rowHeight
+			if usedHeight + spacing + rowHeight <= availableHeight {
+				usedHeight += spacing + rowHeight
 				result.append(event)
 			} else {
 				break
 			}
 		}
 
+		return (events: result, usedHeight: usedHeight)
+	}
+
+	private func fittingSections(
+		in availableHeight: CGFloat,
+		from sections: [EventSectionData],
+		hasLeadingContent: Bool = false
+	) -> [EventSectionData] {
+		var remainingHeight = availableHeight
+		var result: [EventSectionData] = []
+
+		for section in sections {
+			let spacingBefore = (hasLeadingContent || !result.isEmpty) ? sectionSpacing : 0
+
+			if remainingHeight < spacingBefore + sectionHeaderHeight {
+				break
+			}
+
+			let fittedEvents = fittingEvents(
+				in: remainingHeight - spacingBefore - sectionHeaderHeight,
+				from: section.events
+			)
+
+			if !fittedEvents.events.isEmpty {
+				remainingHeight -= spacingBefore + sectionHeaderHeight + fittedEvents.usedHeight
+				result.append(
+					EventSectionData(
+						id: section.id,
+						header: section.header,
+						events: fittedEvents.events
+					)
+				)
+			}
+		}
+
 		return result
+	}
+
+	private func totalHeight(for events: [WidgetEvent]) -> CGFloat {
+		fittingEvents(in: .greatestFiniteMagnitude, from: events).usedHeight
+	}
+
+	private func upcomingEventsColumn(height: CGFloat, overflowEvents: [WidgetEvent]) -> some View {
+		let fittedOverflowEvents = fittingEvents(in: height, from: overflowEvents)
+		let fittedDaySections = fittingSections(
+			in: height - fittedOverflowEvents.usedHeight,
+			from: upcomingDaySections(from: entry.upcomingDaysEvents),
+			hasLeadingContent: !fittedOverflowEvents.events.isEmpty
+		)
+
+		return columnContentView {
+			if fittedOverflowEvents.events.isEmpty && fittedDaySections.isEmpty {
+				centeredSecondaryMessage("No upcoming events", fontSize: 14)
+			} else {
+				VStack(alignment: .leading, spacing: 0) {
+					if !fittedOverflowEvents.events.isEmpty {
+						eventRowsView(fittedOverflowEvents.events)
+					}
+
+					if !fittedDaySections.isEmpty {
+						sectionListView(fittedDaySections)
+							.padding(.top, fittedOverflowEvents.events.isEmpty ? 0 : sectionSpacing)
+					}
+				}
+			}
+		}
+	}
+
+	private func eventRowsView(_ events: [WidgetEvent]) -> some View {
+		VStack(alignment: .leading, spacing: eventSpacing) {
+			ForEach(events) { event in
+				eventRow(event)
+			}
+		}
+	}
+
+	private func centeredSecondaryMessage(
+		_ text: String,
+		fontSize: CGFloat,
+		trailingPadding: CGFloat = 0
+	) -> some View {
+		VStack {
+			Spacer()
+			Text(text)
+				.font(.system(size: fontSize))
+				.foregroundStyle(.secondary)
+				.multilineTextAlignment(.center)
+				.padding(.trailing, trailingPadding)
+				.frame(maxWidth: .infinity)
+			Spacer()
+		}
+	}
+
+	private func columnContentView<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+		content()
+			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+			.clipped()
+	}
+
+	private func twoColumnLayoutView<Left: View, Right: View>(
+		isEmpty: Bool,
+		@ViewBuilder left: @escaping (CGFloat) -> Left,
+		@ViewBuilder right: @escaping (CGFloat) -> Right
+	) -> some View {
+		Group {
+			if isEmpty {
+				emptyStateView
+			} else {
+				GeometryReader { geometry in
+					HStack(spacing: 0) {
+						left(geometry.size.height)
+						right(geometry.size.height)
+					}
+				}
+			}
+		}
 	}
 
 	private func estimatedRowHeight(for event: WidgetEvent) -> CGFloat {
@@ -393,50 +493,47 @@ struct EventWidgetView: View {
 
 	private var bottomBar: some View {
 		HStack(alignment: .firstTextBaseline) {
-			Text(widgetFamily == .systemMedium ? "events upcoming." : "events today.")
+			Text(bottomBarLabel)
 				.font(.system(size: 12))
 				.fontWeight(.medium)
 				.fontWidth(.condensed)
 				.foregroundStyle(.secondary)
 			Spacer()
-			if entry.isAuthorized {
-				if widgetFamily == .systemSmall {
-					if entry.todayHasEvents {
-						Text(
-							String(
-								format: "%02d",
-								entry.todayEventCount
-							)
-						)
-						.font(.system(size: 12, weight: .regular, design: .monospaced))
-						.foregroundStyle(.secondary)
-					} else {
-						Image(systemName: "eyes")
-							.font(.system(size: 12))
-					}
-				}
-				
-				if widgetFamily == .systemMedium {
-					if entry.hasEvents {
-						Text(
-							String(
-								format: "%02d",
-								entry.eventCount
-							)
-						)
-						.font(.system(size: 12, weight: .regular, design: .monospaced))
-						.foregroundStyle(.secondary)
-					} else {
-						Image(systemName: "eyes")
-							.font(.system(size: 12))
-					}
-				}
-			} else {
-				Image(systemName: "exclamationmark.triangle")
-					.font(.system(size: 12))
-					.foregroundStyle(.orange)
-			}
+			bottomBarStatusView
 		}
 		.padding(.vertical, -4)
+	}
+
+	private var bottomBarLabel: String {
+		widgetFamily == .systemSmall ? "events today." : "events upcoming."
+	}
+
+	private var bottomBarCount: Int? {
+		guard entry.isAuthorized else {
+			return nil
+		}
+
+		switch widgetFamily {
+		case .systemSmall:
+			return entry.todayHasEvents ? entry.todayEventCount : nil
+		default:
+			return entry.hasEvents ? entry.eventCount : nil
+		}
+	}
+
+	@ViewBuilder
+	private var bottomBarStatusView: some View {
+		if !entry.isAuthorized {
+			Image(systemName: "exclamationmark.triangle")
+				.font(.system(size: 12))
+				.foregroundStyle(.orange)
+		} else if let count = bottomBarCount {
+			Text(String(format: "%02d", count))
+				.font(.system(size: 12, weight: .regular, design: .monospaced))
+				.foregroundStyle(.secondary)
+		} else {
+			Image(systemName: "eyes")
+				.font(.system(size: 12))
+		}
 	}
 }
