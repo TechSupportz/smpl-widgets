@@ -25,7 +25,6 @@ struct EventWidgetView: View {
 			} else {
 				permissionRequiredView
 			}
-			Spacer()
 			bottomBar
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -152,7 +151,25 @@ struct EventWidgetView: View {
 	}
 
 	private func largeRightColumn(height: CGFloat) -> some View {
-		upcomingEventsColumn(height: height, overflowEvents: [])
+		let fittedCount = largeFittingTodayEventCount(in: height)
+		let overflowEvents = Array(entry.todayDisplayableEvents.dropFirst(fittedCount))
+		return upcomingEventsColumn(height: height, overflowEvents: overflowEvents)
+	}
+
+	private func largeFittingTodayEventCount(in height: CGFloat) -> Int {
+		let allDayEvents = entry.todayDisplayableEvents.filter {
+			$0.isAllDay || $0.spansMultipleDays()
+		}
+		let timedEvents = entry.todayDisplayableEvents.filter {
+			!$0.isAllDay && !$0.spansMultipleDays()
+		}
+		let fittedSections = fittingSections(
+			in: height - totalHeight(for: allDayEvents),
+			from: hourlySections(from: timedEvents),
+			hasLeadingContent: !allDayEvents.isEmpty
+		)
+		let fittedTimedCount = fittedSections.reduce(0) { $0 + $1.events.count }
+		return allDayEvents.count + fittedTimedCount
 	}
 
 	// MARK: - Hour Timeline Helpers
@@ -178,7 +195,19 @@ struct EventWidgetView: View {
 	}
 
 	private func hourHeaderText(for hour: Int) -> String {
-		String(format: "%02d:00", hour)
+		let formatter = DateFormatter()
+		formatter.locale = .autoupdatingCurrent
+		formatter.setLocalizedDateFormatFromTemplate("j:mm")
+
+		var components = DateComponents()
+		components.hour = hour
+		components.minute = 0
+
+		guard let date = Calendar.autoupdatingCurrent.date(from: components) else {
+			return String(format: "%02d:00", hour)
+		}
+
+		return formatter.string(from: date)
 	}
 
 	// MARK: - Shared Day Section
@@ -232,7 +261,7 @@ struct EventWidgetView: View {
 	// MARK: - Events List Logic
 
 	private let eventSpacing: CGFloat = 6
-	private let sectionHeaderHeight: CGFloat = 10
+	private let sectionHeaderHeight: CGFloat = 13
 	private let sectionSpacing: CGFloat = 6
 
 	private func fittingEvents(
@@ -363,7 +392,7 @@ struct EventWidgetView: View {
 				emptyStateView
 			} else {
 				GeometryReader { geometry in
-					HStack(spacing: 0) {
+					HStack(spacing: 8) {
 						left(geometry.size.height)
 						right(geometry.size.height)
 					}
@@ -382,7 +411,9 @@ struct EventWidgetView: View {
 	}
 
 	private func eventRow(_ event: WidgetEvent) -> some View {
-		HStack(alignment: .center, spacing: 6) {
+		let isAllDayStyle = event.isAllDay || event.spansMultipleDays()
+
+		return HStack(alignment: .center, spacing: 6) {
 			Capsule()
 				.fill(event.pillColor(at: entry.date))
 				.frame(width: 4)
@@ -406,7 +437,7 @@ struct EventWidgetView: View {
 
 					if let location = event.location, !location.isEmpty {
 						HStack(spacing: 2) {
-							Image(systemName: "mappin.and.ellipse.circle.fill")
+							Image(systemName: "mappin.and.ellipse")
 							Text(location)
 								.font(.system(size: 12))
 								.lineLimit(1)
@@ -416,9 +447,16 @@ struct EventWidgetView: View {
 				.font(.system(size: 8, weight: .regular))
 				.fontWidth(.condensed)
 			}
-			.padding(.vertical, 1)
+			.padding(.vertical, isAllDayStyle ? 2 : 1)
+			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 		}
 		.fixedSize(horizontal: false, vertical: true)
+		.background {
+			if isAllDayStyle {
+				RoundedRectangle(cornerRadius: 4)
+					.fill(event.calendarColor.opacity(0.1))
+			}
+		}
 	}
 
 	private func timeRangeText(for event: WidgetEvent) -> String {
@@ -482,7 +520,7 @@ struct EventWidgetView: View {
 
 			Text("Tap to open smpl.")
 				.font(.system(size: 10, weight: .regular))
-				.foregroundStyle(.tertiary)
+				.foregroundStyle(.secondary)
 
 			Spacer()
 		}

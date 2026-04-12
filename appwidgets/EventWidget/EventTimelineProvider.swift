@@ -167,7 +167,7 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 				calendarColor: .mint
 			),
 			WidgetEvent(
-				title: "Lunch with Alex",
+				title: "Dinner with Oscar",
 				startDate: calendar.date(bySettingHour: 20, minute: 0, second: 0, of: now)!,
 				endDate: calendar.date(bySettingHour: 21, minute: 0, second: 0, of: now)!,
 				isAllDay: false,
