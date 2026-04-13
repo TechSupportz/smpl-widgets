@@ -8,6 +8,10 @@
 import SwiftUI
 import WidgetKit
 
+#if canImport(UIKit)
+	import UIKit
+#endif
+
 struct EventWidgetView: View {
 	var entry: EventEntry
 	@Environment(\.widgetFamily) var widgetFamily
@@ -16,6 +20,35 @@ struct EventWidgetView: View {
 		let id: String
 		let header: String
 		let events: [WidgetEvent]
+	}
+
+	private struct LargeTodayLayout {
+		let allDayEvents: [WidgetEvent]
+		let timedSections: [EventSectionData]
+
+		var fittedEventCount: Int {
+			allDayEvents.count + timedSections.reduce(0) { $0 + $1.events.count }
+		}
+	}
+
+	private enum LayoutMetrics {
+		static let eventSpacing: CGFloat = 6
+		static let sectionSpacing: CGFloat = 6
+		static let sectionHeaderToEventsSpacing: CGFloat = 4
+		static let titleToMetadataSpacing: CGFloat = 2
+		static let metadataLineSpacing: CGFloat = 2
+		static let timedRowVerticalPadding: CGFloat = 1
+		static let allDayRowVerticalPadding: CGFloat = 2
+
+		#if canImport(UIKit)
+			static let titleLineHeight = ceil(UIFont.systemFont(ofSize: 16, weight: .semibold).lineHeight)
+			static let metadataLineHeight = ceil(UIFont.systemFont(ofSize: 12, weight: .regular).lineHeight)
+			static let sectionHeaderHeight = ceil(UIFont.systemFont(ofSize: 10, weight: .medium).lineHeight)
+		#else
+			static let titleLineHeight: CGFloat = 20
+			static let metadataLineHeight: CGFloat = 16
+			static let sectionHeaderHeight: CGFloat = 13
+		#endif
 	}
 
 	var body: some View {
@@ -118,32 +151,20 @@ struct EventWidgetView: View {
 	}
 
 	private func largeLeftColumn(height: CGFloat) -> some View {
-		let allDayEvents = entry.todayDisplayableEvents.filter {
-			$0.isAllDay || $0.spansMultipleDays()
-		}
-		let timedEvents = entry.todayDisplayableEvents.filter {
-			!$0.isAllDay && !$0.spansMultipleDays()
-		}
-		let fittedSections = fittingSections(
-			in: height - totalHeight(for: allDayEvents),
-			from: hourlySections(from: timedEvents),
-			hasLeadingContent: !allDayEvents.isEmpty
-		)
+		let fittedLayout = fittingLargeTodayLayout(in: height)
 
 		return columnContentView {
-			if allDayEvents.isEmpty && timedEvents.isEmpty {
+			if fittedLayout.fittedEventCount == 0 {
 				centeredSecondaryMessage("All done\nfor today", fontSize: 18, trailingPadding: 16)
 			} else {
 				VStack(alignment: .leading, spacing: 0) {
-					if !allDayEvents.isEmpty {
-						eventRowsView(allDayEvents)
+					if !fittedLayout.allDayEvents.isEmpty {
+						eventRowsView(fittedLayout.allDayEvents)
 					}
 
-					if !fittedSections.isEmpty {
-						sectionListView(fittedSections)
-							.padding(.top, allDayEvents.isEmpty ? 0 : sectionSpacing)
-					} else if timedEvents.isEmpty {
-						Spacer()
+					if !fittedLayout.timedSections.isEmpty {
+						sectionListView(fittedLayout.timedSections)
+							.padding(.top, fittedLayout.allDayEvents.isEmpty ? 0 : sectionSpacing)
 					}
 				}
 			}
@@ -151,25 +172,30 @@ struct EventWidgetView: View {
 	}
 
 	private func largeRightColumn(height: CGFloat) -> some View {
-		let fittedCount = largeFittingTodayEventCount(in: height)
-		let overflowEvents = Array(entry.todayDisplayableEvents.dropFirst(fittedCount))
+		let overflowEvents = Array(
+			entry.todayDisplayableEvents.dropFirst(fittingLargeTodayLayout(in: height).fittedEventCount)
+		)
 		return upcomingEventsColumn(height: height, overflowEvents: overflowEvents)
 	}
 
-	private func largeFittingTodayEventCount(in height: CGFloat) -> Int {
+	private func fittingLargeTodayLayout(in height: CGFloat) -> LargeTodayLayout {
 		let allDayEvents = entry.todayDisplayableEvents.filter {
 			$0.isAllDay || $0.spansMultipleDays()
 		}
 		let timedEvents = entry.todayDisplayableEvents.filter {
 			!$0.isAllDay && !$0.spansMultipleDays()
 		}
+		let fittedAllDayEvents = fittingEvents(in: height, from: allDayEvents)
 		let fittedSections = fittingSections(
-			in: height - totalHeight(for: allDayEvents),
+			in: height - fittedAllDayEvents.usedHeight,
 			from: hourlySections(from: timedEvents),
-			hasLeadingContent: !allDayEvents.isEmpty
+			hasLeadingContent: !fittedAllDayEvents.events.isEmpty
 		)
-		let fittedTimedCount = fittedSections.reduce(0) { $0 + $1.events.count }
-		return allDayEvents.count + fittedTimedCount
+
+		return LargeTodayLayout(
+			allDayEvents: fittedAllDayEvents.events,
+			timedSections: fittedSections
+		)
 	}
 
 	// MARK: - Hour Timeline Helpers
@@ -233,7 +259,7 @@ struct EventWidgetView: View {
 	}
 
 	private func sectionView(_ section: EventSectionData) -> some View {
-		VStack(alignment: .leading, spacing: 4) {
+		VStack(alignment: .leading, spacing: LayoutMetrics.sectionHeaderToEventsSpacing) {
 			sectionHeaderView(section.header)
 			eventRowsView(section.events)
 		}
@@ -245,6 +271,7 @@ struct EventWidgetView: View {
 				.font(.system(size: 10, weight: .medium))
 				.italic()
 				.foregroundStyle(.primary)
+				.frame(height: sectionHeaderHeight, alignment: .leading)
 
 			Rectangle()
 				.fill(Color.gray.opacity(0.4))
@@ -260,19 +287,23 @@ struct EventWidgetView: View {
 
 	// MARK: - Events List Logic
 
-	private let eventSpacing: CGFloat = 6
-	private let sectionHeaderHeight: CGFloat = 13
-	private let sectionSpacing: CGFloat = 6
+	private var eventSpacing: CGFloat { LayoutMetrics.eventSpacing }
+	private var sectionHeaderHeight: CGFloat { LayoutMetrics.sectionHeaderHeight }
+	private var sectionSpacing: CGFloat { LayoutMetrics.sectionSpacing }
 
 	private func fittingEvents(
 		in availableHeight: CGFloat,
 		from events: [WidgetEvent]
 	) -> (events: [WidgetEvent], usedHeight: CGFloat) {
+		guard availableHeight > 0 else {
+			return (events: [], usedHeight: 0)
+		}
+
 		var usedHeight: CGFloat = 0
 		var result: [WidgetEvent] = []
 
 		for event in events {
-			let rowHeight = estimatedRowHeight(for: event)
+			let rowHeight = rowHeight(for: event)
 			let spacing = result.isEmpty ? 0 : eventSpacing
 
 			if usedHeight + spacing + rowHeight <= availableHeight {
@@ -291,6 +322,10 @@ struct EventWidgetView: View {
 		from sections: [EventSectionData],
 		hasLeadingContent: Bool = false
 	) -> [EventSectionData] {
+		guard availableHeight > 0 else {
+			return []
+		}
+
 		var remainingHeight = availableHeight
 		var result: [EventSectionData] = []
 
@@ -302,33 +337,38 @@ struct EventWidgetView: View {
 			}
 
 			let fittedEvents = fittingEvents(
-				in: remainingHeight - spacingBefore - sectionHeaderHeight,
+				in: remainingHeight
+					- spacingBefore
+					- sectionHeaderHeight
+					- LayoutMetrics.sectionHeaderToEventsSpacing,
 				from: section.events
 			)
 
-			if !fittedEvents.events.isEmpty {
-				remainingHeight -= spacingBefore + sectionHeaderHeight + fittedEvents.usedHeight
-				result.append(
-					EventSectionData(
-						id: section.id,
-						header: section.header,
-						events: fittedEvents.events
-					)
-				)
+			guard !fittedEvents.events.isEmpty else {
+				break
 			}
+
+			remainingHeight -=
+				spacingBefore
+				+ sectionHeaderHeight
+				+ LayoutMetrics.sectionHeaderToEventsSpacing
+				+ fittedEvents.usedHeight
+			result.append(
+				EventSectionData(
+					id: section.id,
+					header: section.header,
+					events: fittedEvents.events
+				)
+			)
 		}
 
 		return result
 	}
 
-	private func totalHeight(for events: [WidgetEvent]) -> CGFloat {
-		fittingEvents(in: .greatestFiniteMagnitude, from: events).usedHeight
-	}
-
 	private func upcomingEventsColumn(height: CGFloat, overflowEvents: [WidgetEvent]) -> some View {
 		let fittedOverflowEvents = fittingEvents(in: height, from: overflowEvents)
 		let fittedDaySections = fittingSections(
-			in: height - fittedOverflowEvents.usedHeight,
+			in: max(height - fittedOverflowEvents.usedHeight, 0),
 			from: upcomingDaySections(from: entry.upcomingDaysEvents),
 			hasLeadingContent: !fittedOverflowEvents.events.isEmpty
 		)
@@ -401,17 +441,49 @@ struct EventWidgetView: View {
 		}
 	}
 
-	private func estimatedRowHeight(for event: WidgetEvent) -> CGFloat {
-		let titleHeight: CGFloat = 20
-		let timeHeight: CGFloat = eventSecondaryText(for: event) == nil ? 0 : 16
-		let locationHeight: CGFloat = (event.location != nil && !event.location!.isEmpty) ? 16 : 0
-		let verticalPadding: CGFloat = 2
+	private func rowHeight(for event: WidgetEvent) -> CGFloat {
+		let metadataLineCount = eventMetadataLineCount(for: event)
+		let metadataHeight: CGFloat
 
-		return titleHeight + timeHeight + locationHeight + verticalPadding
+		if metadataLineCount == 0 {
+			metadataHeight = 0
+		} else {
+			metadataHeight = LayoutMetrics.titleToMetadataSpacing
+				+ (CGFloat(metadataLineCount) * LayoutMetrics.metadataLineHeight)
+				+ (CGFloat(max(metadataLineCount - 1, 0)) * LayoutMetrics.metadataLineSpacing)
+		}
+
+		return LayoutMetrics.titleLineHeight
+			+ metadataHeight
+			+ (eventRowVerticalPadding(for: event) * 2)
+	}
+
+	private func eventRowVerticalPadding(for event: WidgetEvent) -> CGFloat {
+		event.isAllDay || event.spansMultipleDays()
+			? LayoutMetrics.allDayRowVerticalPadding
+			: LayoutMetrics.timedRowVerticalPadding
+	}
+
+	private func eventMetadataLineCount(for event: WidgetEvent) -> Int {
+		let secondaryTextCount = eventSecondaryText(for: event) == nil ? 0 : 1
+		let locationCount = eventLocationText(for: event) == nil ? 0 : 1
+		return secondaryTextCount + locationCount
+	}
+
+	private func eventLocationText(for event: WidgetEvent) -> String? {
+		guard let location = event.location?.trimmingCharacters(in: .whitespacesAndNewlines),
+			!location.isEmpty
+		else {
+			return nil
+		}
+
+		return location
 	}
 
 	private func eventRow(_ event: WidgetEvent) -> some View {
 		let isAllDayStyle = event.isAllDay || event.spansMultipleDays()
+		let secondaryText = eventSecondaryText(for: event)
+		let location = eventLocationText(for: event)
 
 		return HStack(alignment: .center, spacing: 6) {
 			Capsule()
@@ -424,33 +496,38 @@ struct EventWidgetView: View {
 					.font(.system(size: 16, weight: .semibold))
 					.fontWidth(.compressed)
 					.lineLimit(1)
+					.frame(height: LayoutMetrics.titleLineHeight, alignment: .leading)
 
-				VStack(alignment: .leading, spacing: 2) {
-					if let secondaryText = eventSecondaryText(for: event) {
-						HStack(spacing: 2) {
-							Image(systemName: eventSecondaryIcon(for: event))
-							Text(secondaryText)
-								.font(.system(size: 12))
-								.fixedSize(horizontal: true, vertical: false)
+				if secondaryText != nil || location != nil {
+					VStack(alignment: .leading, spacing: LayoutMetrics.metadataLineSpacing) {
+						if let secondaryText {
+							HStack(spacing: 2) {
+								Image(systemName: eventSecondaryIcon(for: event))
+								Text(secondaryText)
+									.font(.system(size: 12))
+									.fixedSize(horizontal: true, vertical: false)
+							}
+							.frame(height: LayoutMetrics.metadataLineHeight, alignment: .leading)
+						}
+
+						if let location {
+							HStack(spacing: 2) {
+								Image(systemName: "mappin.and.ellipse")
+								Text(location)
+									.font(.system(size: 12))
+									.lineLimit(1)
+							}
+							.frame(height: LayoutMetrics.metadataLineHeight, alignment: .leading)
 						}
 					}
-
-					if let location = event.location, !location.isEmpty {
-						HStack(spacing: 2) {
-							Image(systemName: "mappin.and.ellipse")
-							Text(location)
-								.font(.system(size: 12))
-								.lineLimit(1)
-						}
-					}
+					.font(.system(size: 8, weight: .regular))
+					.fontWidth(.condensed)
 				}
-				.font(.system(size: 8, weight: .regular))
-				.fontWidth(.condensed)
 			}
-			.padding(.vertical, isAllDayStyle ? 2 : 1)
+			.padding(.vertical, eventRowVerticalPadding(for: event))
 			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 		}
-		.fixedSize(horizontal: false, vertical: true)
+		.frame(height: rowHeight(for: event), alignment: .top)
 		.background {
 			if isAllDayStyle {
 				RoundedRectangle(cornerRadius: 4)
@@ -539,7 +616,6 @@ struct EventWidgetView: View {
 			Spacer()
 			bottomBarStatusView
 		}
-		.padding(.vertical, -4)
 	}
 
 	private var bottomBarLabel: String {
