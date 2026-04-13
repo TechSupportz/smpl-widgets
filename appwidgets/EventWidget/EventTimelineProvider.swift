@@ -15,15 +15,14 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 	typealias Intent = EventConfigurationIntent
 
 	func placeholder(in context: Context) -> EventEntry {
-		EventEntry(date: Date(), events: Self.sampleEvents, authState: .authorized)
+		Self.previewEntry(for: context.family)
 	}
 
 	func snapshot(
 		for configuration: EventConfigurationIntent, in context: Context
 	) async -> EventEntry {
 		if context.isPreview {
-			return EventEntry(
-				date: Date(), events: Self.sampleUpcomingEvents, authState: .authorized)
+			return Self.previewEntry(for: context.family)
 		}
 
 		let status = EKEventStore.authorizationStatus(for: .event)
@@ -145,108 +144,190 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 
 	// MARK: - Sample Data for Previews
 
-	static var sampleEvents: [WidgetEvent] {
-		let now = Date()
-		let calendar = Calendar.current
-		let startOfToday = calendar.startOfDay(for: now)
-		let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
+	static func previewEntry(for family: WidgetFamily) -> EventEntry {
+		EventEntry(date: previewReferenceDate, events: previewEvents(for: family), authState: .authorized)
+	}
 
-		return [
-			WidgetEvent(
-				title: "Team Standup",
-				startDate: startOfToday,
-				endDate: startOfTomorrow,
-				isAllDay: true,
+	static var previewReferenceDate: Date {
+		var components = DateComponents()
+		components.year = 2026
+		components.month = 1
+		components.day = 14
+		components.hour = 9
+		components.minute = 30
+
+		return Calendar.current.date(from: components) ?? .now
+	}
+
+	static func previewEvents(for family: WidgetFamily) -> [WidgetEvent] {
+		switch family {
+		case .systemSmall:
+			return smallPreviewEvents
+		case .systemLarge:
+			return largePreviewEvents
+		default:
+			return mediumPreviewEvents
+		}
+	}
+
+	private static var smallPreviewEvents: [WidgetEvent] {
+		[
+			previewEvent(
+				title: "Team Meeting",
+				dayOffset: 0,
+				startHour: 9,
+				endHour: 10,
 				calendarColor: .blue
 			),
-			WidgetEvent(
-				title: "Focus Time",
-				startDate: calendar.date(bySettingHour: 18, minute: 0, second: 0, of: now)!,
-				endDate: calendar.date(bySettingHour: 19, minute: 0, second: 0, of: now)!,
-				isAllDay: false,
-				calendarColor: .mint
-			),
-			WidgetEvent(
-				title: "Dinner with Oscar",
-				startDate: calendar.date(bySettingHour: 20, minute: 0, second: 0, of: now)!,
-				endDate: calendar.date(bySettingHour: 21, minute: 0, second: 0, of: now)!,
-				isAllDay: false,
-				calendarColor: .green
-			),
-			WidgetEvent(
-				title: "Project Review",
-				startDate: calendar.date(bySettingHour: 21, minute: 0, second: 0, of: now)!,
-				endDate: calendar.date(bySettingHour: 22, minute: 0, second: 0, of: now)!,
-				isAllDay: false,
+			previewEvent(
+				title: "Coffee with Oscar",
+				dayOffset: 0,
+				startHour: 11,
+				endHour: 12,
+				location: "Pitstop Cafe",
 				calendarColor: .orange
-			),
-			WidgetEvent(
-				title: "Client Meeting",
-				startDate: calendar.date(bySettingHour: 21, minute: 30, second: 0, of: now)!,
-				endDate: calendar.date(bySettingHour: 22, minute: 30, second: 0, of: now)!,
-				isAllDay: false,
-				location: "Conference Room A",
-				calendarColor: .purple
-			),
-			WidgetEvent(
-				title: "Design Sync",
-				startDate: calendar.date(bySettingHour: 23, minute: 0, second: 0, of: now)!,
-				endDate: calendar.date(bySettingHour: 23, minute: 30, second: 0, of: now)!,
-				isAllDay: false,
-				location: "Zoom",
-				calendarColor: .red
 			),
 		]
 	}
 
-	static var sampleUpcomingEvents: [WidgetEvent] {
-		let now = Date()
-		let calendar = Calendar.current
-		let today = calendar.startOfDay(for: now)
-		let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
-		let dayAfterTomorrow = calendar.date(byAdding: .day, value: 2, to: today)!
-		let day3 = calendar.date(byAdding: .day, value: 3, to: today)!
-		let day5 = calendar.date(byAdding: .day, value: 5, to: today)!
-
-		return sampleEvents + [
-			WidgetEvent(
-				title: "Morning Jog",
-				startDate: calendar.date(bySettingHour: 7, minute: 0, second: 0, of: tomorrow)!,
-				endDate: calendar.date(bySettingHour: 8, minute: 0, second: 0, of: tomorrow)!,
-				isAllDay: false,
-				calendarColor: .green
+	private static var mediumPreviewEvents: [WidgetEvent] {
+		[
+			previewEvent(
+				title: "Project Deadline",
+				dayOffset: 0,
+				startHour: 0,
+				startMinute: 0,
+				endDayOffset: 1,
+				endHour: 0,
+				endMinute: 0,
+				isAllDay: true,
+				calendarColor: .teal
 			),
-			WidgetEvent(
-				title: "Sprint Planning",
-				startDate: calendar.date(bySettingHour: 10, minute: 0, second: 0, of: tomorrow)!,
-				endDate: calendar.date(bySettingHour: 11, minute: 30, second: 0, of: tomorrow)!,
-				isAllDay: false,
-				calendarColor: .blue
-			),
-			WidgetEvent(
-				title: "Quarterly Planning",
-				startDate: calendar.date(
-					bySettingHour: 10, minute: 0, second: 0, of: dayAfterTomorrow)!,
-				endDate: calendar.date(
-					bySettingHour: 12, minute: 0, second: 0, of: dayAfterTomorrow)!,
-				isAllDay: false,
-				calendarColor: .blue
-			),
-			WidgetEvent(
-				title: "Team Lunch",
-				startDate: calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day3)!,
-				endDate: calendar.date(bySettingHour: 13, minute: 0, second: 0, of: day3)!,
-				isAllDay: false,
-				location: "The Noodle Place",
+			previewEvent(
+				title: "Coffee with Oscar",
+				dayOffset: 0,
+				startHour: 11,
+				endHour: 12,
+				location: "Pitstop Cafe",
 				calendarColor: .orange
 			),
-			WidgetEvent(
-				title: "Dentist Appointment",
-				startDate: calendar.date(bySettingHour: 14, minute: 0, second: 0, of: day5)!,
-				endDate: calendar.date(bySettingHour: 15, minute: 0, second: 0, of: day5)!,
-				isAllDay: false,
-				calendarColor: .red
+			previewEvent(
+				title: "Review with Max",
+				dayOffset: 1,
+				startHour: 14,
+				endHour: 15,
+				calendarColor: .green
+			),
+			previewEvent(
+				title: "Dentist",
+				dayOffset: 2,
+				startHour: 10,
+				endHour: 11,
+				calendarColor: .pink
 			),
 		]
+	}
+
+	private static var largePreviewEvents: [WidgetEvent] {
+		[
+			previewEvent(
+				title: "Conference",
+				dayOffset: 0,
+				startHour: 0,
+				startMinute: 0,
+				endDayOffset: 1,
+				endHour: 0,
+				endMinute: 0,
+				isAllDay: true,
+				calendarColor: .teal
+			),
+			previewEvent(
+				title: "Team Meeting",
+				dayOffset: 0,
+				startHour: 9,
+				endHour: 10,
+				calendarColor: .blue
+			),
+			previewEvent(
+				title: "Coffee with Oscar",
+				dayOffset: 0,
+				startHour: 11,
+				endHour: 12,
+				location: "Pitstop Cafe",
+				calendarColor: .orange
+			),
+			previewEvent(
+				title: "Lunch",
+				dayOffset: 0,
+				startHour: 13,
+				endHour: 14,
+				calendarColor: .orange
+			),
+			previewEvent(
+				title: "Run",
+				dayOffset: 0,
+				startHour: 18,
+				endHour: 19,
+				calendarColor: .purple
+			),
+			previewEvent(
+				title: "Review with Max",
+				dayOffset: 1,
+				startHour: 14,
+				endHour: 15,
+				calendarColor: .green
+			),
+			previewEvent(
+				title: "Dentist",
+				dayOffset: 2,
+				startHour: 10,
+				endHour: 11,
+				calendarColor: .pink
+			),
+			previewEvent(
+				title: "Call with Charles",
+				dayOffset: 2,
+				startHour: 16,
+				endHour: 17,
+				calendarColor: .blue
+			),
+		]
+	}
+
+	private static func previewEvent(
+		title: String,
+		dayOffset: Int,
+		startHour: Int,
+		startMinute: Int = 0,
+		endDayOffset: Int? = nil,
+		endHour: Int,
+		endMinute: Int = 0,
+		isAllDay: Bool = false,
+		location: String? = nil,
+		calendarColor: Color
+	) -> WidgetEvent {
+		let startDate = previewDate(dayOffset: dayOffset, hour: startHour, minute: startMinute)
+		let endDate = previewDate(
+			dayOffset: endDayOffset ?? dayOffset,
+			hour: endHour,
+			minute: endMinute
+		)
+
+		return WidgetEvent(
+			title: title,
+			startDate: startDate,
+			endDate: endDate,
+			isAllDay: isAllDay,
+			location: location,
+			calendarColor: calendarColor
+		)
+	}
+
+	private static func previewDate(dayOffset: Int, hour: Int, minute: Int) -> Date {
+		let calendar = Calendar.current
+		let startOfDay = calendar.startOfDay(for: previewReferenceDate)
+		let day = calendar.date(byAdding: .day, value: dayOffset, to: startOfDay) ?? startOfDay
+
+		return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) ?? day
 	}
 }

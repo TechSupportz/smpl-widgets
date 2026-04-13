@@ -31,8 +31,7 @@ struct EventWidget: Widget {
 #Preview("Small", as: .systemSmall) {
 	EventWidget()
 } timeline: {
-	EventEntry(
-		date: .now, events: EventTimelineProvider.sampleUpcomingEvents, authState: .authorized)
+	EventTimelineProvider.previewEntry(for: .systemSmall)
 	EventEntry(date: .now, events: [], authState: .authorized)
 	EventEntry(date: .now, events: [], authState: .denied)
 }
@@ -40,8 +39,7 @@ struct EventWidget: Widget {
 #Preview("Medium", as: .systemMedium) {
 	EventWidget()
 } timeline: {
-	EventEntry(
-		date: .now, events: EventTimelineProvider.sampleUpcomingEvents, authState: .authorized)
+	EventTimelineProvider.previewEntry(for: .systemMedium)
 	EventEntry(date: .now, events: [], authState: .authorized)
 	EventEntry(date: .now, events: [], authState: .denied)
 }
@@ -49,8 +47,7 @@ struct EventWidget: Widget {
 #Preview("Large", as: .systemLarge) {
 	EventWidget()
 } timeline: {
-	EventEntry(
-		date: .now, events: EventTimelineProvider.sampleUpcomingEvents, authState: .authorized)
+	EventTimelineProvider.previewEntry(for: .systemLarge)
 	EventEntry(date: .now, events: [], authState: .authorized)
 	EventEntry(date: .now, events: [], authState: .denied)
 }
