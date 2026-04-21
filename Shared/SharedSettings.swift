@@ -89,7 +89,6 @@ final class SharedSettings: ObservableObject {
 		set {
 			objectWillChange.send()
 			userDefaults.set(newValue.rawValue, forKey: widgetColorSchemeKey)
-			userDefaults.synchronize()
 		}
 	}
 
@@ -98,7 +97,6 @@ final class SharedSettings: ObservableObject {
 		set {
 			objectWillChange.send()
 			userDefaults.set(newValue, forKey: mockDataEnabledKey)
-			userDefaults.synchronize()
 		}
 	}
 

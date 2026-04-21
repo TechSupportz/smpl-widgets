@@ -7,14 +7,8 @@
 
 import SwiftUI
 import WidgetKit
-
-#if canImport(ImageIO)
-	import ImageIO
-#endif
-
-#if canImport(UIKit)
-	import UIKit
-#endif
+import ImageIO
+import UIKit
 
 struct ImageWidgetView: View {
 	@Environment(\.widgetFamily) private var family
@@ -94,52 +88,44 @@ struct ImageWidgetView: View {
 	}
 
 	private var widgetImage: Image? {
-		#if canImport(UIKit)
-			guard let data = entry.imageData else {
-				return nil
-			}
-			guard let uiImage = downsampledImage(from: data) else {
-				return nil
-			}
-			return Image(uiImage: uiImage)
-		#else
+		guard let data = entry.imageData else {
 			return nil
-		#endif
+		}
+		guard let uiImage = downsampledImage(from: data) else {
+			return nil
+		}
+		return Image(uiImage: uiImage)
 	}
 
 	private func downsampledImage(from data: Data) -> UIImage? {
-		#if canImport(UIKit) && canImport(ImageIO)
-			let maxPixelSize: CGFloat
-			switch family {
-			case .systemSmall:
-				maxPixelSize = 900
-			case .systemMedium:
-				maxPixelSize = 1200
-			case .systemLarge:
-				maxPixelSize = 1400
-			default:
-				maxPixelSize = 900
-			}
+		let maxPixelSize: CGFloat
+		switch family {
+		case .systemSmall:
+			maxPixelSize = 900
+		case .systemMedium:
+			maxPixelSize = 1200
+		case .systemLarge:
+			maxPixelSize = 1400
+		default:
+			maxPixelSize = 900
+		}
 
-			guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
-				return UIImage(data: data)
-			}
+		guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+			return UIImage(data: data)
+		}
 
-			let options: CFDictionary =
-				[
-					kCGImageSourceCreateThumbnailFromImageAlways: true,
-					kCGImageSourceCreateThumbnailWithTransform: true,
-					kCGImageSourceShouldCacheImmediately: true,
-					kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-				] as CFDictionary
+		let options: CFDictionary =
+			[
+				kCGImageSourceCreateThumbnailFromImageAlways: true,
+				kCGImageSourceCreateThumbnailWithTransform: true,
+				kCGImageSourceShouldCacheImmediately: true,
+				kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+			] as CFDictionary
 
-			guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else {
-				return UIImage(data: data)
-			}
+		guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else {
+			return UIImage(data: data)
+		}
 
-			return UIImage(cgImage: cgImage)
-		#else
-			return nil
-		#endif
+		return UIImage(cgImage: cgImage)
 	}
 }

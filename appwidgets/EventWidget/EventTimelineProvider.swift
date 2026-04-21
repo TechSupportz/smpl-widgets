@@ -61,7 +61,8 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 			// Always refresh at the start of the next day
 			let calendar = Calendar.current
 			let startOfNextDay = calendar.date(
-				byAdding: .day, value: 1, to: calendar.startOfDay(for: currentDate))!
+				byAdding: .day, value: 1, to: calendar.startOfDay(for: currentDate)
+			) ?? currentDate.addingTimeInterval(86_400)
 			updateDates.insert(startOfNextDay)
 
 			// Add granular updates for event state changes from all week events
@@ -108,13 +109,15 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		case .notDetermined:
 			let entry = EventEntry(date: currentDate, events: [], authState: authState)
 			// Check again in 15 minutes in case user grants permission
-			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate)!
+			let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate)
+				?? currentDate.addingTimeInterval(900)
 			return Timeline(entries: [entry], policy: .after(nextUpdate))
 
 		case .denied, .restricted:
 			let entry = EventEntry(date: currentDate, events: [], authState: authState)
 			// Check again in 1 hour in case user changes settings
-			let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!
+			let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)
+				?? currentDate.addingTimeInterval(3_600)
 			return Timeline(entries: [entry], policy: .after(nextUpdate))
 		}
 	}
@@ -123,7 +126,8 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		let calendar = Calendar.current
 		let now = Date()
 		let startOfDay = calendar.startOfDay(for: now)
-		let endOfWeek = calendar.date(byAdding: .day, value: 15, to: startOfDay)!
+		let endOfWeek = calendar.date(byAdding: .day, value: 15, to: startOfDay)
+			?? now.addingTimeInterval(15 * 86_400)
 		let eventStore = EKEventStore()
 
 		let predicate = eventStore.predicateForEvents(

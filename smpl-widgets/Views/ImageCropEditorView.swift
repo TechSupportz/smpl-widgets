@@ -6,10 +6,7 @@
 //
 
 import SwiftUI
-
-#if canImport(UIKit)
-	import UIKit
-#endif
+import UIKit
 
 struct ImageCropEditorView: View {
 	let slot: ImageSlotMetadata
@@ -436,7 +433,6 @@ struct ImageCropEditorView: View {
 
 // MARK: - Preview Helpers
 
-#if canImport(UIKit)
 private func previewImage() -> UIImage {
 	let size = CGSize(width: 800, height: 600)
 	let format = UIGraphicsImageRendererFormat()
@@ -466,11 +462,9 @@ private func previewImage() -> UIImage {
 		}
 	}
 }
-#endif
 
 // MARK: - Canvas Preview
 
-#if canImport(UIKit)
 #Preview("Image Crop Editor") {
 	let image = previewImage()
 	let slot = ImageSlotMetadata(
@@ -488,4 +482,3 @@ private func previewImage() -> UIImage {
 		onSave: {}
 	)
 }
-#endif

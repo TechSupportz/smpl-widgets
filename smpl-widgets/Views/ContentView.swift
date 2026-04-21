@@ -10,13 +10,12 @@ import EventKit
 import Foundation
 import PhotosUI
 import SwiftUI
+import UIKit
 import WidgetKit
-
-#if canImport(UIKit)
-	import UIKit
-#endif
+import os
 
 struct ContentView: View {
+	private let logger = Logger(subsystem: "com.tnitish.smpl-widgets", category: "ContentView")
 	@Binding private var deepLinkTarget: String?
 	@StateObject private var locationService = LocationService()
 	@StateObject private var calendarService = CalendarService()
@@ -368,7 +367,7 @@ struct ContentView: View {
 			}
 			WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
 		} catch {
-			print(error.localizedDescription)
+			logger.error("Failed to save selected image slot: \(error.localizedDescription)")
 		}
 	}
 
@@ -385,11 +384,9 @@ struct ContentView: View {
 	}
 
 	private func openSettings() {
-		#if canImport(UIKit)
-			if let url = URL(string: UIApplication.openSettingsURLString) {
-				openURL(url)
-			}
-		#endif
+		if let url = URL(string: UIApplication.openSettingsURLString) {
+			openURL(url)
+		}
 	}
 
 	private func relativeTimeString(from date: Date) -> String {

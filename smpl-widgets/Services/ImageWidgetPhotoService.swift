@@ -9,10 +9,7 @@ import Combine
 import Photos
 import PhotosUI
 import SwiftUI
-
-#if canImport(UIKit)
-	import UIKit
-#endif
+import UIKit
 
 @MainActor
 final class ImageWidgetPhotoService: ObservableObject {
@@ -69,23 +66,13 @@ final class ImageWidgetPhotoService: ObservableObject {
 		isSavingSlot = true
 		defer { isSavingSlot = false }
 
-		#if canImport(UIKit)
-			let selectedImage: UIImage
-		#endif
-
-		#if canImport(UIKit)
-			guard
-				let imageData = try await item.loadTransferable(type: Data.self),
-				let image = UIImage(data: imageData)
-			else {
-				throw SlotCreationError.unreadableImage
-			}
-			selectedImage = image
-		#else
-			_ = item
-			_ = quality
+		guard
+			let imageData = try await item.loadTransferable(type: Data.self),
+			let image = UIImage(data: imageData)
+		else {
 			throw SlotCreationError.unreadableImage
-		#endif
+		}
+		let selectedImage = image
 
 		let assetMetadata = metadata(for: item)
 		let displayName = makeDisplayName(

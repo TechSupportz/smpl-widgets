@@ -6,11 +6,8 @@
 //
 
 import SwiftUI
+import UIKit
 import WidgetKit
-
-#if canImport(UIKit)
-	import UIKit
-#endif
 
 struct ImageWidget: Widget {
 	let kind: String = "ImageWidget"
@@ -43,7 +40,6 @@ struct ImageWidget: Widget {
 #Preview("With Image", as: .systemSmall) {
 	ImageWidget()
 } timeline: {
-	#if canImport(UIKit)
 		let renderer = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 600))
 		let previewImage = renderer.image { context in
 			UIColor.systemYellow.setFill()
@@ -56,9 +52,6 @@ struct ImageWidget: Widget {
 			]
 			text.draw(at: CGPoint(x: 120, y: 240), withAttributes: textAttributes)
 		}
-	#else
-		let previewImage = UIImage()
-	#endif
 
 	ImageEntry(
 		date: .now,

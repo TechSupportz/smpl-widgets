@@ -7,11 +7,8 @@
 
 import Foundation
 import ImageIO
-
-#if canImport(UIKit)
-	import UIKit
-	import UniformTypeIdentifiers
-#endif
+import UIKit
+import UniformTypeIdentifiers
 
 private struct LegacyImageWidgetAlbumCache: Codable {
 	let fileNames: [String]
@@ -66,8 +63,6 @@ final class ImageWidgetStorage {
 		return readData(for: slot.fileName)
 	}
 
-	#if canImport(UIKit)
-
 	func imageData(forSlotID id: String, cropFamilyGroup: WidgetCropFamilyGroup) -> Data? {
 		guard let slot = slot(for: id),
 			let originalData = readData(for: slot.fileName),
@@ -114,8 +109,6 @@ final class ImageWidgetStorage {
 		return croppedImage.jpegData(compressionQuality: 0.92)
 	}
 
-	#endif
-
 	func updateCrop(forSlotID id: String, square: CropRect?, wide: CropRect?) {
 		var slots = readStoredSlots()
 		guard let index = slots.firstIndex(where: { $0.id == id }) else { return }
@@ -124,8 +117,6 @@ final class ImageWidgetStorage {
 		slots[index].cropWide = wide
 		_ = writeStoredSlots(slots)
 	}
-
-	#if canImport(UIKit)
 
 	@discardableResult
 	func addSlot(
@@ -167,8 +158,6 @@ final class ImageWidgetStorage {
 		return slot
 	}
 
-	#endif
-
 	func deleteSlot(id: String) {
 		var slots = readStoredSlots()
 		guard let index = slots.firstIndex(where: { $0.id == id }) else {
@@ -195,7 +184,6 @@ final class ImageWidgetStorage {
 	private func writeStoredSlots(_ slots: [ImageSlotMetadata]) -> Bool {
 		if slots.isEmpty {
 			userDefaults.removeObject(forKey: slotsKey)
-			userDefaults.synchronize()
 			return true
 		}
 
@@ -204,7 +192,6 @@ final class ImageWidgetStorage {
 		}
 
 		userDefaults.set(data, forKey: slotsKey)
-		userDefaults.synchronize()
 		return true
 	}
 
@@ -223,8 +210,6 @@ final class ImageWidgetStorage {
 
 			userDefaults.removeObject(forKey: legacyAlbumCacheKey)
 		}
-
-		userDefaults.synchronize()
 	}
 
 	private func readData(for fileName: String) -> Data? {
@@ -234,8 +219,6 @@ final class ImageWidgetStorage {
 
 		return try? Data(contentsOf: fileURL)
 	}
-
-	#if canImport(UIKit)
 
 	private func encodedImageData(from image: UIImage, quality: CGFloat) -> (data: Data, fileExtension: String)? {
 		guard let renderedImage = renderedImage(from: image, maxDimension: maxExportDimension),
@@ -296,8 +279,6 @@ final class ImageWidgetStorage {
 			image.draw(in: CGRect(origin: .zero, size: targetSize))
 		}
 	}
-
-	#endif
 
 	private var rootDirectoryURL: URL? {
 		guard let containerURL = fileManager.containerURL(

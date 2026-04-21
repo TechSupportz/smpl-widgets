@@ -6,12 +6,9 @@
 //
 
 import SwiftUI
+import UIKit
 import WidgetKit
 import EventKit
-
-#if canImport(UIKit)
-	import UIKit
-#endif
 
 /// Authorization state for the widget to display appropriate UI
 enum CalendarAuthState {
@@ -129,11 +126,9 @@ struct WidgetEvent: Identifiable {
 	}
 
 	private static func calendarColor(for calendar: EKCalendar) -> Color {
-		#if canImport(UIKit)
-			if let cgColor = calendar.cgColor {
-				return Color(uiColor: UIColor(cgColor: cgColor))
-			}
-		#endif
+		if let cgColor = calendar.cgColor {
+			return Color(uiColor: UIColor(cgColor: cgColor))
+		}
 
 		return .blue
 	}

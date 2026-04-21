@@ -7,12 +7,9 @@
 
 import BackgroundTasks
 import SwiftUI
+import UIKit
 import WidgetKit
 import os
-
-#if canImport(UIKit)
-	import UIKit
-#endif
 
 @main
 struct smpl_widgetsApp: App {
@@ -118,7 +115,12 @@ struct smpl_widgetsApp: App {
 			forTaskWithIdentifier: bgTaskID,
 			using: nil
 		) { task in
-			handleBackgroundRefresh(task: task as! BGAppRefreshTask)
+			guard let task = task as? BGAppRefreshTask else {
+				logger.error("Received unexpected background task type for \(bgTaskID)")
+				return
+			}
+
+			handleBackgroundRefresh(task: task)
 		}
 	}
 

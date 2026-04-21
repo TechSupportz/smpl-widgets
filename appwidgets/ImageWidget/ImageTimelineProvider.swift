@@ -6,9 +6,7 @@
 //
 
 import AppIntents
-#if canImport(UIKit)
-	import UIKit
-#endif
+import UIKit
 import WidgetKit
 
 struct ImageTimelineProvider: AppIntentTimelineProvider {
@@ -27,14 +25,10 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 
 	func snapshot(for configuration: ImageSlotConfigurationIntent, in context: Context) async -> ImageEntry {
 		if context.isPreview {
-			#if canImport(UIKit)
 			return ImageEntry(
 				date: .now,
 				imageData: UIImage(named: "ImagePreview")?.pngData()
 			)
-			#else
-			return ImageEntry(date: .now, imageData: nil)
-			#endif
 		}
 
 		return makeEntry(for: configuration, at: .now, family: context.family)

@@ -8,11 +8,8 @@
 import Photos
 import PhotosUI
 import SwiftUI
+import UIKit
 import WidgetKit
-
-#if canImport(UIKit)
-	import UIKit
-#endif
 
 struct ImageWidgetSettingsCard: View {
 	let authorizationStatus: PHAuthorizationStatus
@@ -173,22 +170,20 @@ struct ImageWidgetSettingsCard: View {
 					}
 				)
 			) {
-				#if canImport(UIKit)
-					if let slot = activeEditingSlot,
-					   let data = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
-					   let image = UIImage(data: data)
-					{
-						ImageCropEditorView(
-							slot: slot,
-							image: image,
-							onSave: {
-								onCropSaved()
-								WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
-							}
-						)
+				if let slot = activeEditingSlot,
+				   let data = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
+				   let image = UIImage(data: data)
+				{
+					ImageCropEditorView(
+						slot: slot,
+						image: image,
+						onSave: {
+							onCropSaved()
+							WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
+						}
+					)
 				}
-			#endif
-		}
+			}
 	}
 
 	private func slotRow(_ slot: ImageSlotMetadata) -> some View {
@@ -223,21 +218,17 @@ struct ImageWidgetSettingsCard: View {
 
 	@ViewBuilder
 	private func slotThumbnail(_ slot: ImageSlotMetadata) -> some View {
-		#if canImport(UIKit)
-			if let imageData = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
-				let image = UIImage(data: imageData)
-			{
-				Image(uiImage: image)
-					.resizable()
-					.scaledToFill()
-					.frame(width: 40, height: 40)
-					.clipShape(.rect(cornerRadius: 8))
-			} else {
-				thumbnailPlaceholder
-			}
-		#else
+		if let imageData = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
+			let image = UIImage(data: imageData)
+		{
+			Image(uiImage: image)
+				.resizable()
+				.scaledToFill()
+				.frame(width: 40, height: 40)
+				.clipShape(.rect(cornerRadius: 8))
+		} else {
 			thumbnailPlaceholder
-		#endif
+		}
 	}
 
 	private var thumbnailPlaceholder: some View {

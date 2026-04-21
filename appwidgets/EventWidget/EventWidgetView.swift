@@ -6,11 +6,8 @@
 //
 
 import SwiftUI
+import UIKit
 import WidgetKit
-
-#if canImport(UIKit)
-	import UIKit
-#endif
 
 struct EventWidgetView: View {
 	var entry: EventEntry
@@ -40,15 +37,9 @@ struct EventWidgetView: View {
 		static let timedRowVerticalPadding: CGFloat = 1
 		static let allDayRowVerticalPadding: CGFloat = 2
 
-		#if canImport(UIKit)
-			static let titleLineHeight = ceil(UIFont.systemFont(ofSize: 16, weight: .semibold).lineHeight)
-			static let metadataLineHeight = ceil(UIFont.systemFont(ofSize: 12, weight: .regular).lineHeight)
-			static let sectionHeaderHeight = ceil(UIFont.systemFont(ofSize: 10, weight: .medium).lineHeight)
-		#else
-			static let titleLineHeight: CGFloat = 20
-			static let metadataLineHeight: CGFloat = 16
-			static let sectionHeaderHeight: CGFloat = 13
-		#endif
+		static let titleLineHeight = ceil(UIFont.systemFont(ofSize: 16, weight: .semibold).lineHeight)
+		static let metadataLineHeight = ceil(UIFont.systemFont(ofSize: 12, weight: .regular).lineHeight)
+		static let sectionHeaderHeight = ceil(UIFont.systemFont(ofSize: 10, weight: .medium).lineHeight)
 	}
 
 	var body: some View {

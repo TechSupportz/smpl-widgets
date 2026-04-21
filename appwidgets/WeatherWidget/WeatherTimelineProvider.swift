@@ -79,7 +79,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 					byAdding: .minute,
 					value: 5,
 					to: currentDate
-				)!
+				) ?? currentDate.addingTimeInterval(300)
 
 				let errorCondition = isLocationError(error) ? "error,location" : "error"
 
@@ -101,11 +101,14 @@ struct WeatherTimelineProvider: TimelineProvider {
 
 		// Find the next fetch hour after the current hour
 		if let nextHour = fetchHours.first(where: { $0 > currentHour }) {
-			return calendar.date(bySettingHour: nextHour, minute: 0, second: 0, of: date)!
+			return calendar.date(bySettingHour: nextHour, minute: 0, second: 0, of: date)
+				?? date.addingTimeInterval(3_600)
 		} else {
 			// Next fetch is 6am tomorrow
-			let tomorrow = calendar.date(byAdding: .day, value: 1, to: date)!
-			return calendar.date(bySettingHour: 6, minute: 0, second: 0, of: tomorrow)!
+			let tomorrow = calendar.date(byAdding: .day, value: 1, to: date)
+				?? date.addingTimeInterval(86_400)
+			return calendar.date(bySettingHour: 6, minute: 0, second: 0, of: tomorrow)
+				?? tomorrow.addingTimeInterval(21_600)
 		}
 	}
 
@@ -134,7 +137,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 		// Get the current hour's start time (e.g., 7:28am -> 7:00am)
 		let currentHourStart = calendar.date(
 			from: calendar.dateComponents([.year, .month, .day, .hour], from: currentDate)
-		)!
+		) ?? currentDate
 
 		// Create an entry for the current partial hour first (displays immediately)
 		// This uses the current hour's forecast
@@ -175,7 +178,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 				byAdding: .minute,
 				value: -15,
 				to: forecastHour
-			)!
+			) ?? forecastHour.addingTimeInterval(-900)
 
 			// Only add if display time is in the future
 			if displayTime > currentDate {
