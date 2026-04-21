@@ -13,6 +13,7 @@ public struct MonthCalendarTimelineProvider: TimelineProvider {
             MonthCalendarEntry(date: currentDate.startOfDay),
             MonthCalendarEntry(date: currentDate.startOfNextDay)
         ]
+#if DEBUG
         if SharedSettings.shared.isMockDataEnabled {
             var components = DateComponents()
             components.year = 2026
@@ -22,6 +23,7 @@ public struct MonthCalendarTimelineProvider: TimelineProvider {
             completion(Timeline(entries: [MonthCalendarEntry(date: mockDate)], policy: .never))
             return
         }
+#endif
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 }

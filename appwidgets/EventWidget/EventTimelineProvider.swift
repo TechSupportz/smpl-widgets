@@ -39,10 +39,12 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 	func timeline(
 		for configuration: EventConfigurationIntent, in context: Context
 	) async -> Timeline<EventEntry> {
+#if DEBUG
 		if SharedSettings.shared.isMockDataEnabled {
 			let entry = Self.previewEntry(for: context.family)
 			return Timeline(entries: [entry], policy: .never)
 		}
+#endif
 
 		let currentDate = Date()
 

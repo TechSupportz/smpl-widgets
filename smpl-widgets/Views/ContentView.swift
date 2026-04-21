@@ -187,10 +187,12 @@ struct ContentView: View {
 						// Reload all widgets when color scheme preference changes
 						WidgetCenter.shared.reloadAllTimelines()
 					}
+#if DEBUG
 					.onChange(of: sharedSettings.isMockDataEnabled) {
 						// Reload all widgets when mock data mode changes
 						WidgetCenter.shared.reloadAllTimelines()
 					}
+#endif
 					.contentMargins(.bottom, 96)
 					.contentMargins(.top, 32)
 					.mask(
@@ -306,10 +308,13 @@ struct ContentView: View {
 			.labelsHidden()
 			.pickerStyle(.menu)
 
+
+#if DEBUG
 			Divider()
 
 			Toggle("Use Mock Data (Screenshots)", isOn: $sharedSettings.isMockDataEnabled)
 				.font(.body)
+#endif
 		}
 		.padding(.vertical, 16)
 		.padding(.horizontal, 24)
