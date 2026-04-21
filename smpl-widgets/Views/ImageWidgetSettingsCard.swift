@@ -187,7 +187,7 @@ struct ImageWidgetSettingsCard: View {
 	}
 
 	private func slotRow(_ slot: ImageSlotMetadata) -> some View {
-		HStack(spacing: 12) {
+		HStack(spacing: 16) {
 			slotThumbnail(slot)
 
 			Text(slot.displayName)
@@ -197,11 +197,11 @@ struct ImageWidgetSettingsCard: View {
 				Button {
 					editingSlotID = slot.id
 				} label: {
-				Image(systemName: "pencil")
+				Image(systemName: "crop")
 					.font(.body)
 			}
 			.buttonStyle(.borderless)
-			.foregroundStyle(.secondary)
+
 
 			Button(role: .destructive) {
 				onDeleteSlot(slot)
