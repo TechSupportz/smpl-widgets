@@ -37,40 +37,25 @@ struct ImageCropEditorView: View {
 	}
 
 	var body: some View {
-		VStack(spacing: 0) {
-			header
-			Divider()
+		NavigationStack {
 			scrollContent
+				.navigationTitle(slot.displayName)
+				.navigationBarTitleDisplayMode(.inline)
+				.toolbar {
+					ToolbarItem(placement: .topBarLeading) {
+						Button("Close") {
+							dismiss()
+						}
+						.foregroundStyle(.secondary)
+					}
+					ToolbarItem(placement: .topBarTrailing) {
+						Button("Save") {
+							saveAndDismiss()
+						}
+						.fontWeight(.semibold)
+					}
+				}
 		}
-		.background(Color(.systemBackground))
-		.ignoresSafeArea(edges: .bottom)
-	}
-
-	// MARK: - Header
-
-	private var header: some View {
-		HStack(spacing: 16) {
-			Button("Close") {
-				dismiss()
-			}
-			.foregroundStyle(.secondary)
-
-			Spacer()
-
-			Text(slot.displayName)
-				.font(.headline)
-				.lineLimit(1)
-
-			Spacer()
-
-			Button("Save") {
-				saveAndDismiss()
-			}
-			.fontWeight(.semibold)
-		}
-		.padding(.horizontal)
-		.padding(.vertical, 12)
-		.background(.ultraThinMaterial)
 	}
 
 	// MARK: - Scrollable Content
@@ -107,14 +92,20 @@ struct ImageCropEditorView: View {
 			let maskAspect = selectedGroup.maskAspectRatio
 			let maskW = containerSize.width * 0.8
 			let maskH = maskW / maskAspect
+			let renderedSize = renderedImageSize(
+				containerSize: containerSize,
+				imageSize: originalImage.size,
+				scale: scale
+			)
 
 			ZStack {
 				Image(uiImage: originalImage)
 					.resizable()
-					.scaledToFill()
-					.scaleEffect(scale)
-					.offset(offset)
-					.frame(width: containerSize.width, height: containerSize.height)
+					.frame(width: renderedSize.width, height: renderedSize.height)
+					.position(
+						x: (containerSize.width / 2) + offset.width,
+						y: (containerSize.height / 2) + offset.height
+					)
 
 				Canvas { context, size in
 					context.fill(
@@ -137,30 +128,26 @@ struct ImageCropEditorView: View {
 				RoundedRectangle(cornerRadius: 20)
 					.stroke(.white, lineWidth: 2)
 					.frame(width: maskW, height: maskH)
-			}
-			.clipped()
-			.contentShape(Rectangle())
+				}
+				.clipped()
+				.contentShape(Rectangle())
 			.gesture(
 				SimultaneousGesture(
-					MagnificationGesture()
+					MagnifyGesture()
 						.onChanged { value in
-							withAnimation(.linear(duration: 0.01)) {
-								scale = lastScale * value
-								applyClamping(containerSize: containerSize, maskAspect: maskAspect)
-							}
+							scale = lastScale * value.magnification
+							applyClamping(containerSize: containerSize, maskAspect: maskAspect)
 						}
 						.onEnded { _ in
 							lastScale = scale
 						},
 					DragGesture()
 						.onChanged { value in
-							withAnimation(.linear(duration: 0.01)) {
-								offset = CGSize(
-									width: lastOffset.width + value.translation.width,
-									height: lastOffset.height + value.translation.height
-								)
-								applyClamping(containerSize: containerSize, maskAspect: maskAspect)
-							}
+							offset = CGSize(
+								width: lastOffset.width + value.translation.width,
+								height: lastOffset.height + value.translation.height
+							)
+							applyClamping(containerSize: containerSize, maskAspect: maskAspect)
 						}
 						.onEnded { _ in
 							lastOffset = offset
@@ -168,18 +155,29 @@ struct ImageCropEditorView: View {
 					)
 				)
 				.onAppear {
-				editorContainerSize = containerSize
-				setupState(for: selectedGroup, containerSize: containerSize, maskAspect: maskAspect)
+					syncEditorState(to: containerSize, for: selectedGroup)
+				}
+				.onChange(of: containerSize) { _, newSize in
+					syncEditorState(to: newSize, for: selectedGroup)
+				}
+				.onChange(of: selectedGroup) { oldGroup, newGroup in
+					guard editorContainerSize != .zero else { return }
+					saveCurrentCrop(
+						for: oldGroup,
+						containerSize: editorContainerSize,
+						maskAspect: oldGroup.maskAspectRatio
+					)
+					setupState(
+						for: newGroup,
+						containerSize: editorContainerSize,
+						maskAspect: newGroup.maskAspectRatio
+					)
+				}
 			}
-			.onChange(of: selectedGroup) {
-				saveCurrentCrop(containerSize: containerSize, maskAspect: maskAspect)
-				setupState(for: selectedGroup, containerSize: containerSize, maskAspect: maskAspect)
-			}
-		}
 		.frame(maxWidth: .infinity)
 		.frame(height: 350)
 		.padding(.horizontal)
-		.cornerRadius(16)
+		.clipShape(.rect(cornerRadius: 16))
 	}
 
 	// MARK: - Preview
@@ -199,6 +197,7 @@ struct ImageCropEditorView: View {
 		.padding(.horizontal)
 	}
 
+	@ViewBuilder
 	private func previewWidgetFrame(crop: CropRect, aspect: CGFloat) -> some View {
 		let frameW: CGFloat = 160
 		let frameH = frameW / aspect
@@ -209,12 +208,8 @@ struct ImageCropEditorView: View {
 			height: crop.height * originalImage.size.height
 		)
 
-		guard let cgImage = originalImage.cgImage?.cropping(to: cropPixel) else {
-			return AnyView(EmptyView())
-		}
-		let cropped = UIImage(cgImage: cgImage)
-
-		return AnyView(
+		if let cgImage = originalImage.cgImage?.cropping(to: cropPixel) {
+			let cropped = UIImage(cgImage: cgImage)
 			ZStack {
 				RoundedRectangle(cornerRadius: 24, style: .continuous)
 					.fill(.gray.opacity(0.15))
@@ -227,7 +222,7 @@ struct ImageCropEditorView: View {
 					.frame(width: frameW, height: frameH)
 					.clipShape(.rect(cornerRadius: 20))
 			}
-		)
+		}
 	}
 
 	private var currentLiveCrop: CropRect {
@@ -267,8 +262,11 @@ struct ImageCropEditorView: View {
 			dismiss()
 			return
 		}
-		let maskAspect = selectedGroup.maskAspectRatio
-		saveCurrentCrop(containerSize: editorContainerSize, maskAspect: maskAspect)
+		saveCurrentCrop(
+			for: selectedGroup,
+			containerSize: editorContainerSize,
+			maskAspect: selectedGroup.maskAspectRatio
+		)
 		ImageWidgetStorage.shared.updateCrop(
 			forSlotID: slot.id,
 			square: squareCrop,
@@ -298,13 +296,17 @@ struct ImageCropEditorView: View {
 		}
 	}
 
-	private func saveCurrentCrop(containerSize: CGSize, maskAspect: CGFloat) {
+	private func saveCurrentCrop(
+		for group: WidgetCropFamilyGroup,
+		containerSize: CGSize,
+		maskAspect: CGFloat
+	) {
 		let crop = computeCropRect(
 			containerSize: containerSize,
 			imageSize: originalImage.size,
 			maskAspect: maskAspect
 		)
-		switch selectedGroup {
+		switch group {
 		case .square:
 			squareCrop = crop
 		case .wide:
@@ -326,7 +328,32 @@ struct ImageCropEditorView: View {
 		lastOffset = newOffset
 	}
 
+	private func syncEditorState(to containerSize: CGSize, for group: WidgetCropFamilyGroup) {
+		guard containerSize != .zero else { return }
+
+		let previousSize = editorContainerSize
+		if previousSize == .zero {
+			editorContainerSize = containerSize
+			setupState(for: group, containerSize: containerSize, maskAspect: group.maskAspectRatio)
+			return
+		}
+
+		guard previousSize != containerSize else { return }
+
+		saveCurrentCrop(for: group, containerSize: previousSize, maskAspect: group.maskAspectRatio)
+		editorContainerSize = containerSize
+		setupState(for: group, containerSize: containerSize, maskAspect: group.maskAspectRatio)
+	}
+
 	// MARK: - Geometry
+
+	private func renderedImageSize(containerSize: CGSize, imageSize: CGSize, scale: CGFloat) -> CGSize {
+		let baseScale = max(containerSize.width / imageSize.width, containerSize.height / imageSize.height)
+		return CGSize(
+			width: imageSize.width * baseScale * scale,
+			height: imageSize.height * baseScale * scale
+		)
+	}
 
 	private func computeScaleOffset(
 		crop: CropRect,

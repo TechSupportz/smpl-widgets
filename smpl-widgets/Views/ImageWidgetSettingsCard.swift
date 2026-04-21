@@ -23,8 +23,9 @@ struct ImageWidgetSettingsCard: View {
 	var selectedImageSlotItem: Binding<PhotosPickerItem?>
 	var onPermissionTap: () -> Void
 	var onDeleteSlot: (ImageSlotMetadata) -> Void
+	var onCropSaved: () -> Void
 
-	@State private var editingSlot: ImageSlotMetadata? = nil
+	@State private var editingSlotID: String? = nil
 
 	private let slotListMaxHeight: CGFloat = 280
 
@@ -77,6 +78,15 @@ struct ImageWidgetSettingsCard: View {
 
 	private var displayedSlots: [ImageSlotMetadata] {
 		Array(slots.reversed())
+	}
+
+	private var activeEditingSlot: ImageSlotMetadata? {
+		guard let editingSlotID else {
+			return nil
+		}
+
+		return ImageWidgetStorage.shared.slot(for: editingSlotID)
+			?? slots.first(where: { $0.id == editingSlotID })
 	}
 
 	var body: some View {
@@ -153,18 +163,29 @@ struct ImageWidgetSettingsCard: View {
 		.padding(.vertical, 16)
 		.padding(.horizontal, 24)
 		.glassEffect(in: .rect(cornerRadius: 24.0))
-		.sheet(item: $editingSlot) { slot in
-			#if canImport(UIKit)
-				if let data = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
-				   let image = UIImage(data: data)
-				{
-					ImageCropEditorView(
-						slot: slot,
-						image: image,
-						onSave: {
-							WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
+			.sheet(
+				isPresented: Binding(
+					get: { activeEditingSlot != nil },
+					set: { isPresented in
+						if !isPresented {
+							editingSlotID = nil
 						}
-					)
+					}
+				)
+			) {
+				#if canImport(UIKit)
+					if let slot = activeEditingSlot,
+					   let data = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
+					   let image = UIImage(data: data)
+					{
+						ImageCropEditorView(
+							slot: slot,
+							image: image,
+							onSave: {
+								onCropSaved()
+								WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
+							}
+						)
 				}
 			#endif
 		}
@@ -178,9 +199,9 @@ struct ImageWidgetSettingsCard: View {
 				.font(.body)
 				.frame(maxWidth: .infinity, alignment: .leading)
 
-			Button {
-				editingSlot = slot
-			} label: {
+				Button {
+					editingSlotID = slot.id
+				} label: {
 				Image(systemName: "pencil")
 					.font(.body)
 			}
@@ -253,7 +274,8 @@ private let mockSlots: [ImageSlotMetadata] = [
 		permissionButtonTitle: "Enable Photos",
 		selectedImageSlotItem: .constant(nil),
 		onPermissionTap: {},
-		onDeleteSlot: { _ in }
+		onDeleteSlot: { _ in },
+		onCropSaved: {}
 	)
 	.padding()
 }
@@ -266,7 +288,8 @@ private let mockSlots: [ImageSlotMetadata] = [
 		permissionButtonTitle: "Enable Photos",
 		selectedImageSlotItem: .constant(nil),
 		onPermissionTap: {},
-		onDeleteSlot: { _ in }
+		onDeleteSlot: { _ in },
+		onCropSaved: {}
 	)
 	.padding()
 }
@@ -279,7 +302,8 @@ private let mockSlots: [ImageSlotMetadata] = [
 		permissionButtonTitle: "Enable Photos",
 		selectedImageSlotItem: .constant(nil),
 		onPermissionTap: {},
-		onDeleteSlot: { _ in }
+		onDeleteSlot: { _ in },
+		onCropSaved: {}
 	)
 	.padding()
 }
@@ -292,7 +316,8 @@ private let mockSlots: [ImageSlotMetadata] = [
 		permissionButtonTitle: "Enable Photos",
 		selectedImageSlotItem: .constant(nil),
 		onPermissionTap: {},
-		onDeleteSlot: { _ in }
+		onDeleteSlot: { _ in },
+		onCropSaved: {}
 	)
 	.padding()
 }

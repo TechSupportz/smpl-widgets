@@ -317,17 +317,18 @@ struct ContentView: View {
 	}
 
 	private func imageWidgetSettingsCard() -> some View {
-		ImageWidgetSettingsCard(
-			authorizationStatus: imageWidgetPhotoService.authorizationStatus,
-			isSaving: imageWidgetPhotoService.isSavingSlot,
-			slots: imageSlots,
-			permissionButtonTitle: imageWidgetPermissionButtonTitle,
-			selectedImageSlotItem: $selectedImageSlotItem,
-			onPermissionTap: {
-				Task { await requestImageWidgetPhotoPermission() }
-			},
-			onDeleteSlot: deleteImageSlot
-		)
+			ImageWidgetSettingsCard(
+				authorizationStatus: imageWidgetPhotoService.authorizationStatus,
+				isSaving: imageWidgetPhotoService.isSavingSlot,
+				slots: imageSlots,
+				permissionButtonTitle: imageWidgetPermissionButtonTitle,
+				selectedImageSlotItem: $selectedImageSlotItem,
+				onPermissionTap: {
+					Task { await requestImageWidgetPhotoPermission() }
+				},
+				onDeleteSlot: deleteImageSlot,
+				onCropSaved: refreshImageSlots
+			)
 		.onChange(of: selectedImageSlotItem) { _, newValue in
 			guard let newValue else { return }
 			Task { await saveSelectedImageSlot(from: newValue) }
