@@ -37,17 +37,29 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 			#endif
 		}
 
-		return makeEntry(for: configuration, at: .now)
+		return makeEntry(for: configuration, at: .now, family: context.family)
 	}
 
 	func timeline(for configuration: ImageSlotConfigurationIntent, in context: Context) async -> Timeline<ImageEntry> {
-		let entry = makeEntry(for: configuration, at: .now)
+		let entry = makeEntry(for: configuration, at: .now, family: context.family)
 		return Timeline(entries: [entry], policy: .never)
 	}
 
-	private func makeEntry(for configuration: ImageSlotConfigurationIntent, at date: Date) -> ImageEntry {
-		let imageData = configuration.imageSlot.flatMap { slot in
-			storage.imageData(forSlotID: slot.id)
+	private func makeEntry(for configuration: ImageSlotConfigurationIntent, at date: Date, family: WidgetFamily?) -> ImageEntry {
+		let imageData = configuration.imageSlot.flatMap { slot -> Data? in
+			guard let family else {
+				return storage.imageData(forSlotID: slot.id)
+			}
+			let group: WidgetCropFamilyGroup
+			switch family {
+			case .systemSmall, .systemLarge:
+				group = .square
+			case .systemMedium:
+				group = .wide
+			default:
+				group = .square
+			}
+			return storage.imageData(forSlotID: slot.id, cropFamilyGroup: group)
 		}
 
 		return ImageEntry(

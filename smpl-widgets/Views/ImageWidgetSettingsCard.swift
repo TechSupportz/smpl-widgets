@@ -8,6 +8,7 @@
 import Photos
 import PhotosUI
 import SwiftUI
+import WidgetKit
 
 #if canImport(UIKit)
 	import UIKit
@@ -22,6 +23,8 @@ struct ImageWidgetSettingsCard: View {
 	var selectedImageSlotItem: Binding<PhotosPickerItem?>
 	var onPermissionTap: () -> Void
 	var onDeleteSlot: (ImageSlotMetadata) -> Void
+
+	@State private var editingSlot: ImageSlotMetadata? = nil
 
 	private let slotListMaxHeight: CGFloat = 280
 
@@ -150,6 +153,21 @@ struct ImageWidgetSettingsCard: View {
 		.padding(.vertical, 16)
 		.padding(.horizontal, 24)
 		.glassEffect(in: .rect(cornerRadius: 24.0))
+		.sheet(item: $editingSlot) { slot in
+			#if canImport(UIKit)
+				if let data = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
+				   let image = UIImage(data: data)
+				{
+					ImageCropEditorView(
+						slot: slot,
+						image: image,
+						onSave: {
+							WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
+						}
+					)
+				}
+			#endif
+		}
 	}
 
 	private func slotRow(_ slot: ImageSlotMetadata) -> some View {
@@ -160,12 +178,20 @@ struct ImageWidgetSettingsCard: View {
 				.font(.body)
 				.frame(maxWidth: .infinity, alignment: .leading)
 
+			Button {
+				editingSlot = slot
+			} label: {
+				Image(systemName: "pencil")
+					.font(.body)
+			}
+			.buttonStyle(.borderless)
+			.foregroundStyle(.secondary)
+
 			Button(role: .destructive) {
 				onDeleteSlot(slot)
 			} label: {
 				Image(systemName: "trash")
 					.font(.body)
-					.padding(.trailing, 4)
 			}
 			.buttonStyle(.borderless)
 		}

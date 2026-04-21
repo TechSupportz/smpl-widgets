@@ -68,6 +68,65 @@ final class ImageWidgetStorage {
 
 	#if canImport(UIKit)
 
+	func imageData(forSlotID id: String, cropFamilyGroup: WidgetCropFamilyGroup) -> Data? {
+		guard let slot = slot(for: id),
+			let originalData = readData(for: slot.fileName),
+			let originalImage = UIImage(data: originalData),
+			let cgImage = originalImage.cgImage
+		else {
+			return imageData(forSlotID: id)
+		}
+
+		let cropRect: CropRect
+		switch cropFamilyGroup {
+		case .square:
+			if let explicitCrop = slot.cropSquare {
+				cropRect = explicitCrop
+			} else {
+				cropRect = CropRect.defaultCrop(
+					imageSize: originalImage.size,
+					maskAspect: cropFamilyGroup.maskAspectRatio
+				)
+			}
+		case .wide:
+			if let explicitCrop = slot.cropWide {
+				cropRect = explicitCrop
+			} else {
+				cropRect = CropRect.defaultCrop(
+					imageSize: originalImage.size,
+					maskAspect: cropFamilyGroup.maskAspectRatio
+				)
+			}
+		}
+
+		let pixelCrop = CGRect(
+			x: cropRect.x * originalImage.size.width,
+			y: cropRect.y * originalImage.size.height,
+			width: cropRect.width * originalImage.size.width,
+			height: cropRect.height * originalImage.size.height
+		)
+
+		guard let croppedCGImage = cgImage.cropping(to: pixelCrop) else {
+			return imageData(forSlotID: id)
+		}
+
+		let croppedImage = UIImage(cgImage: croppedCGImage)
+		return croppedImage.jpegData(compressionQuality: 0.92)
+	}
+
+	#endif
+
+	func updateCrop(forSlotID id: String, square: CropRect?, wide: CropRect?) {
+		var slots = readStoredSlots()
+		guard let index = slots.firstIndex(where: { $0.id == id }) else { return }
+
+		slots[index].cropSquare = square
+		slots[index].cropWide = wide
+		_ = writeStoredSlots(slots)
+	}
+
+	#if canImport(UIKit)
+
 	@discardableResult
 	func addSlot(
 		from image: UIImage,
