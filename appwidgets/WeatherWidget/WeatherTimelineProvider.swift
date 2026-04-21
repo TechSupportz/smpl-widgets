@@ -37,6 +37,17 @@ struct WeatherTimelineProvider: TimelineProvider {
 		in context: Context,
 		completion: @escaping @Sendable (Timeline<WeatherEntry>) -> Void
 	) {
+		if SharedSettings.shared.isMockDataEnabled {
+			let entry = WeatherEntry(
+				date: Date(),
+				condition: "cloudy",
+				temperature: Measurement<UnitTemperature>(value: 25.0, unit: .celsius),
+				symbol: "cloud.sun.fill"
+			)
+			completion(Timeline(entries: [entry], policy: .never))
+			return
+		}
+
 		Task {
 			let currentDate = Date()
 			let weatherService = WeatherService()

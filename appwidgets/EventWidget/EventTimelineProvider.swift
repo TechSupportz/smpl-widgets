@@ -39,6 +39,11 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 	func timeline(
 		for configuration: EventConfigurationIntent, in context: Context
 	) async -> Timeline<EventEntry> {
+		if SharedSettings.shared.isMockDataEnabled {
+			let entry = Self.previewEntry(for: context.family)
+			return Timeline(entries: [entry], policy: .never)
+		}
+
 		let currentDate = Date()
 
 		let status = EKEventStore.authorizationStatus(for: .event)

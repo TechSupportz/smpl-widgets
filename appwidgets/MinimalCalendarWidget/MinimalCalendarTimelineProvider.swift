@@ -28,6 +28,16 @@ struct MinimalCalendarTimelineProvider: TimelineProvider {
 			MinimalCalendarEntry(date: currentDate.startOfNextDay)
 		]
 
+		if SharedSettings.shared.isMockDataEnabled {
+			var components = DateComponents()
+			components.year = 2026
+			components.month = 4
+			components.day = 21
+			let mockDate = Calendar.current.date(from: components) ?? currentDate
+			completion(Timeline(entries: [MinimalCalendarEntry(date: mockDate)], policy: .never))
+			return
+		}
+
 		completion(Timeline(entries: entries, policy: .atEnd))
 	}
 }

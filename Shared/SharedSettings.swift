@@ -61,6 +61,7 @@ final class SharedSettings: ObservableObject {
 	private let lastBackgroundRefreshDateKey = "lastBackgroundRefreshDate"
 	private let lastKnownLocationKey = "com.tnitish.smpl-widgets.lastKnownLocation"
 	private let widgetColorSchemeKey = "com.tnitish.smpl-widgets.widgetColorScheme"
+	private let mockDataEnabledKey = "com.tnitish.smpl-widgets.mockDataEnabled"
 
 	// Fixed refresh interval: 1 hour
 	let refreshInterval: TimeInterval = 3600
@@ -88,6 +89,15 @@ final class SharedSettings: ObservableObject {
 		set {
 			objectWillChange.send()
 			userDefaults.set(newValue.rawValue, forKey: widgetColorSchemeKey)
+			userDefaults.synchronize()
+		}
+	}
+
+	var isMockDataEnabled: Bool {
+		get { userDefaults.bool(forKey: mockDataEnabledKey) }
+		set {
+			objectWillChange.send()
+			userDefaults.set(newValue, forKey: mockDataEnabledKey)
 			userDefaults.synchronize()
 		}
 	}
