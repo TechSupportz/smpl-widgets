@@ -16,7 +16,7 @@ struct ImageWidgetView: View {
 
 	let entry: ImageEntry
 
-	let insetPadding: CGFloat = 12
+	let insetPadding: CGFloat = 10
 	let imageCornerRadius: CGFloat = 20
 
 	private var isPlaceholder: Bool {
@@ -51,6 +51,7 @@ struct ImageWidgetView: View {
 		imageFrameContent {
 			image
 				.resizable()
+				.widgetAccentedRenderingMode(entry.tintImage ? .accentedDesaturated : .fullColor)
 				.scaledToFill()
 		}
 	}

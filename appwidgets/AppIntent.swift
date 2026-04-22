@@ -158,8 +158,19 @@ struct ImageSlotConfigurationIntent: WidgetConfigurationIntent {
 	@Parameter(title: "Image")
 	var imageSlot: ImageSlotEntity?
 
+	@Parameter(title: "Enable Image Tint")
+	var tintImage: Bool?
+
 	static var parameterSummary: some ParameterSummary {
-		Summary("Display \(\.$imageSlot)")
+		Summary("Display \(\.$imageSlot)") {
+			\.$tintImage
+		}
+	}
+}
+
+extension ImageSlotConfigurationIntent {
+	var tintImageEnabled: Bool {
+		tintImage ?? false
 	}
 }
 

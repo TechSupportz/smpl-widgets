@@ -27,7 +27,8 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 		if context.isPreview {
 			return ImageEntry(
 				date: .now,
-				imageData: UIImage(named: "ImagePreview")?.pngData()
+				imageData: UIImage(named: "ImagePreview")?.pngData(),
+				tintImage: configuration.tintImageEnabled
 			)
 		}
 
@@ -58,7 +59,8 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 
 		return ImageEntry(
 			date: date,
-			imageData: imageData
+			imageData: imageData,
+			tintImage: configuration.tintImageEnabled
 		)
 	}
 }
