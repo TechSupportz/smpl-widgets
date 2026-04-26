@@ -90,7 +90,7 @@ struct QuoteWidgetView: View {
 				.font(.system(size: 32))
 				.foregroundStyle(.tertiary)
 
-			Text("Tap and hold to\nedit this widget")
+			Text("Press and hold to\nedit this widget")
 				.font(.system(size: 14, weight: .regular))
 				.foregroundStyle(.secondary)
 				.multilineTextAlignment(.center)

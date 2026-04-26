@@ -5,10 +5,10 @@
 //  Created by Nitish on 03/22/26.
 //
 
-import SwiftUI
-import WidgetKit
 import ImageIO
+import SwiftUI
 import UIKit
+import WidgetKit
 
 struct ImageWidgetView: View {
 	@Environment(\.widgetFamily) private var family
@@ -56,7 +56,9 @@ struct ImageWidgetView: View {
 		}
 	}
 
-	private func imageFrameContent<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
+	private func imageFrameContent<Content: View>(
+		@ViewBuilder content: @escaping () -> Content
+	) -> some View {
 		GeometryReader { proxy in
 			let imageFrameSize = CGSize(
 				width: max(proxy.size.width - (insetPadding * 2), 0),
@@ -76,14 +78,18 @@ struct ImageWidgetView: View {
 
 	private var emptyStateView: some View {
 		VStack(spacing: 10) {
-			Image(systemName: "photo.badge.plus")
+			Image(systemName: entry.hasSavedImages
+				  ? "photo.on.rectangle.angled.fill" : "photo.badge.plus.fill")
 				.font(.system(size: 32, weight: .medium))
 				.foregroundStyle(.tertiary)
 
-			Text("Open app to save\nan image first")
-				.font(.system(size: 14, weight: .regular))
-				.multilineTextAlignment(.center)
-				.foregroundStyle(.secondary)
+			Text(
+				entry.hasSavedImages
+					? "Press and hold\nto edit this widget" : "Open app to save\nan image first"
+			)
+			.font(.system(size: 14, weight: .regular))
+			.multilineTextAlignment(.center)
+			.foregroundStyle(.secondary)
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
 	}

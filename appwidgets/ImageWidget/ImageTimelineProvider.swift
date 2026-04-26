@@ -41,6 +41,7 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 	}
 
 	private func makeEntry(for configuration: ImageSlotConfigurationIntent, at date: Date, family: WidgetFamily?) -> ImageEntry {
+		let hasSavedImages = !storage.allSlots.isEmpty
 		let imageData = configuration.imageSlot.flatMap { slot -> Data? in
 			guard let family else {
 				return storage.imageData(forSlotID: slot.id)
@@ -60,6 +61,7 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 		return ImageEntry(
 			date: date,
 			imageData: imageData,
+			hasSavedImages: hasSavedImages,
 			tintImage: configuration.tintImageEnabled
 		)
 	}

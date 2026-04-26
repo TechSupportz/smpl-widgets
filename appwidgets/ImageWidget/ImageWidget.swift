@@ -37,6 +37,16 @@ struct ImageWidget: Widget {
 	)
 }
 
+#Preview("Needs Configuration", as: .systemSmall) {
+	ImageWidget()
+} timeline: {
+	ImageEntry(
+		date: .now,
+		imageData: nil,
+		hasSavedImages: true
+	)
+}
+
 #Preview("With Image", as: .systemSmall) {
 	ImageWidget()
 } timeline: {

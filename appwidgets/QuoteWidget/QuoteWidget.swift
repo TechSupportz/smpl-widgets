@@ -32,7 +32,7 @@ struct QuoteWidget: Widget {
 	QuoteEntry(date: .now, quote: "")
 }
 
-#Preview("With Quote", as: .systemSmall) {
+#Preview("With Quote", as: .systemMedium) {
 	QuoteWidget()
 } timeline: {
 	QuoteEntry(
@@ -40,5 +40,5 @@ struct QuoteWidget: Widget {
 	quote: "")
 	QuoteEntry(
 		date: .now,
-		quote: "this is a cool quote but with more text, like ALOT more text for some random reason")
+		quote: "")
 }

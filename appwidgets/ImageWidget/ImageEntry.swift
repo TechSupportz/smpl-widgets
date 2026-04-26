@@ -11,12 +11,20 @@ import WidgetKit
 struct ImageEntry: TimelineEntry {
 	let date: Date
 	let imageData: Data?
+	let hasSavedImages: Bool
 	let tintImage: Bool
 	let isPlaceholder: Bool
 
-	init(date: Date, imageData: Data?, tintImage: Bool = false, isPlaceholder: Bool = false) {
+	init(
+		date: Date,
+		imageData: Data?,
+		hasSavedImages: Bool = false,
+		tintImage: Bool = false,
+		isPlaceholder: Bool = false
+	) {
 		self.date = date
 		self.imageData = imageData
+		self.hasSavedImages = hasSavedImages
 		self.tintImage = tintImage
 		self.isPlaceholder = isPlaceholder
 	}
