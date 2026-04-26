@@ -26,10 +26,15 @@ struct WeatherTimelineProvider: TimelineProvider {
 	)
 
 	func placeholder(in context: Context) -> WeatherEntry {
-		dummyWeatherEntry
+		PremiumConfiguration.isUnlocked ? dummyWeatherEntry : lockedPreviewEntry
 	}
 
 	func getSnapshot(in context: Context, completion: @escaping @Sendable (WeatherEntry) -> Void) {
+		if !PremiumConfiguration.isUnlocked {
+			completion(lockedPreviewEntry)
+			return
+		}
+
 		completion(dummyWeatherEntry)
 	}
 
@@ -37,6 +42,11 @@ struct WeatherTimelineProvider: TimelineProvider {
 		in context: Context,
 		completion: @escaping @Sendable (Timeline<WeatherEntry>) -> Void
 	) {
+		if !PremiumConfiguration.isUnlocked {
+			completion(Timeline(entries: [lockedPreviewEntry], policy: .never))
+			return
+		}
+
 #if DEBUG
 		if SharedSettings.shared.isMockDataEnabled {
 			let entry = WeatherEntry(
@@ -215,5 +225,15 @@ struct WeatherTimelineProvider: TimelineProvider {
 
 		let nsError = error as NSError
 		return nsError.domain == kCLErrorDomain
+	}
+
+	private var lockedPreviewEntry: WeatherEntry {
+		WeatherEntry(
+			date: Date(),
+			condition: "cloudy",
+			temperature: Measurement<UnitTemperature>(value: 25.0, unit: .celsius),
+			symbol: "cloud.sun.fill",
+			isLocked: true
+		)
 	}
 }

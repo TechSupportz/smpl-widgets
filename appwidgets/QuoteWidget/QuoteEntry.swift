@@ -11,10 +11,12 @@ struct QuoteEntry: TimelineEntry {
 	let date: Date
 	let quote: String
 	let isPlaceholder: Bool
+	let isLocked: Bool
 
-	init(date: Date, quote: String, isPlaceholder: Bool = false) {
+	init(date: Date, quote: String, isPlaceholder: Bool = false, isLocked: Bool = false) {
 		self.date = date
 		self.quote = quote
 		self.isPlaceholder = isPlaceholder
+		self.isLocked = isLocked
 	}
 }

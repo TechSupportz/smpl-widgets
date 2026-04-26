@@ -24,7 +24,7 @@ struct ImageWidgetView: View {
 	}
 
 	private var widgetURL: URL? {
-		URL(string: "smplwidgets://image")
+		entry.isLocked ? PremiumConfiguration.paywallURL : URL(string: "smplwidgets://image")
 	}
 
 	var body: some View {
@@ -37,6 +37,7 @@ struct ImageWidgetView: View {
 				emptyStateView
 			}
 		}
+		.premiumLockedWidgetStyle(isLocked: entry.isLocked)
 		.widgetURL(widgetURL)
 	}
 

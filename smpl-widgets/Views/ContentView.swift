@@ -15,6 +15,7 @@ import WidgetKit
 import os
 
 struct ContentView: View {
+	@Environment(PurchaseManager.self) private var purchaseManager
 	private let logger = Logger(subsystem: "com.tnitish.smpl-widgets", category: "ContentView")
 	@Binding private var deepLinkTarget: String?
 	@StateObject private var locationService = LocationService()
@@ -25,6 +26,7 @@ struct ContentView: View {
 	@State private var selectedImageSlotItem: PhotosPickerItem?
 	@State private var imageSlots: [ImageSlotMetadata] = ImageWidgetStorage.shared.allSlots
 	private let imageWidgetSettingsSectionID = "imageWidgetSettings"
+	private let premiumAccessSectionID = PremiumConfiguration.paywallSectionID
 
 	init(deepLinkTarget: Binding<String?> = .constant(nil)) {
 		_deepLinkTarget = deepLinkTarget
@@ -126,47 +128,53 @@ struct ContentView: View {
 				ScrollViewReader { proxy in
 					ScrollView(.vertical) {
 						VStack(spacing: 16) {
+							PremiumUnlockCard()
+								.id(premiumAccessSectionID)
+
 							appearanceSettingsCard()
 
-							// Permission Cards
-							// Location Permission Card
-							permissionCard(
-								icon: locationStatusIcon,
-								iconColor: locationStatusColor,
-								title: "Location Access",
-								subtitle: locationStatusText,
-								secondaryText: cachedLocationText,
-								showButton: !isLocationAuthorized,
-								buttonTitle: isLocationDeniedOrRestricted
-									? "Open Settings" : "Enable Location",
-								buttonAction: {
-									if isLocationDeniedOrRestricted {
-										openSettings()
-									} else {
-										locationService.requestPermission()
+							PremiumFeatureGate(message: "Location access powers the premium Weather widget.") {
+								permissionCard(
+									icon: locationStatusIcon,
+									iconColor: locationStatusColor,
+									title: "Location Access",
+									subtitle: locationStatusText,
+									secondaryText: cachedLocationText,
+									showButton: !isLocationAuthorized,
+									buttonTitle: isLocationDeniedOrRestricted
+										? "Open Settings" : "Enable Location",
+									buttonAction: {
+										if isLocationDeniedOrRestricted {
+											openSettings()
+										} else {
+											locationService.requestPermission()
+										}
 									}
-								}
-							)
+								)
+							}
 
-							// Calendar Permission Card
-							permissionCard(
-								icon: calendarService.authorizationStatus.iconName,
-								iconColor: calendarService.authorizationStatus.iconColor,
-								title: "Calendar Access",
-								subtitle: calendarService.authorizationStatus.displayName,
-								showButton: !calendarService.isAuthorized,
-								buttonTitle: calendarService.isDenied
-									? "Open Settings" : "Enable Calendar",
-								buttonAction: {
-									if calendarService.isDenied {
-										openSettings()
-									} else {
-										calendarService.requestPermission()
+							PremiumFeatureGate(message: "Calendar access powers the premium Events widget.") {
+								permissionCard(
+									icon: calendarService.authorizationStatus.iconName,
+									iconColor: calendarService.authorizationStatus.iconColor,
+									title: "Calendar Access",
+									subtitle: calendarService.authorizationStatus.displayName,
+									showButton: !calendarService.isAuthorized,
+									buttonTitle: calendarService.isDenied
+										? "Open Settings" : "Enable Calendar",
+									buttonAction: {
+										if calendarService.isDenied {
+											openSettings()
+										} else {
+											calendarService.requestPermission()
+										}
 									}
-								}
-							)
+								)
+							}
 
-							imageWidgetSettingsCard()
+							PremiumFeatureGate(message: "Save, crop, and configure the premium Image widget here.") {
+								imageWidgetSettingsCard()
+							}
 								.id(imageWidgetSettingsSectionID)
 						}
 						.padding(.horizontal)
@@ -180,6 +188,9 @@ struct ContentView: View {
 						scrollToDeepLinkTarget(using: proxy)
 					}
 					.onChange(of: deepLinkTarget) {
+						scrollToDeepLinkTarget(using: proxy)
+					}
+					.onChange(of: purchaseManager.isPremiumUnlocked) {
 						scrollToDeepLinkTarget(using: proxy)
 					}
 					.onChange(of: sharedSettings.widgetColorScheme) {
@@ -396,17 +407,23 @@ struct ContentView: View {
 	}
 
 	private func scrollToDeepLinkTarget(using proxy: ScrollViewProxy) {
-		guard deepLinkTarget == imageWidgetSettingsSectionID else { return }
+		guard let deepLinkTarget else {
+			return
+		}
 
 		DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
 			withAnimation(.smooth) {
-				proxy.scrollTo(imageWidgetSettingsSectionID, anchor: .top)
+				proxy.scrollTo(deepLinkTarget, anchor: .top)
 			}
-			deepLinkTarget = nil
+
+			if self.deepLinkTarget == deepLinkTarget {
+				self.deepLinkTarget = nil
+			}
 		}
 	}
 }
 
 #Preview {
 	ContentView(deepLinkTarget: .constant(nil))
+		.environment(PurchaseManager.previewLocked)
 }

@@ -15,12 +15,16 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 	typealias Intent = EventConfigurationIntent
 
 	func placeholder(in context: Context) -> EventEntry {
-		Self.previewEntry(for: context.family)
+		Self.previewEntry(for: context.family, isLocked: !PremiumConfiguration.isUnlocked)
 	}
 
 	func snapshot(
 		for configuration: EventConfigurationIntent, in context: Context
 	) async -> EventEntry {
+		if !PremiumConfiguration.isUnlocked {
+			return Self.previewEntry(for: context.family, isLocked: true)
+		}
+
 		if context.isPreview {
 			return Self.previewEntry(for: context.family)
 		}
@@ -39,6 +43,11 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 	func timeline(
 		for configuration: EventConfigurationIntent, in context: Context
 	) async -> Timeline<EventEntry> {
+		if !PremiumConfiguration.isUnlocked {
+			let entry = Self.previewEntry(for: context.family, isLocked: true)
+			return Timeline(entries: [entry], policy: .never)
+		}
+
 #if DEBUG
 		if SharedSettings.shared.isMockDataEnabled {
 			let entry = Self.previewEntry(for: context.family)
@@ -155,8 +164,13 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 
 	// MARK: - Sample Data for Previews
 
-	static func previewEntry(for family: WidgetFamily) -> EventEntry {
-		EventEntry(date: previewReferenceDate, events: previewEvents(for: family), authState: .authorized)
+	static func previewEntry(for family: WidgetFamily, isLocked: Bool = false) -> EventEntry {
+		EventEntry(
+			date: previewReferenceDate,
+			events: previewEvents(for: family),
+			authState: .authorized,
+			isLocked: isLocked
+		)
 	}
 
 	static var previewReferenceDate: Date {

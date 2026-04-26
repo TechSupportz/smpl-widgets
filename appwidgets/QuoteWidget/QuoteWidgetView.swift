@@ -45,11 +45,15 @@ struct QuoteWidgetView: View {
 	// MARK: - Body
 
 	var body: some View {
-		if isPlaceholder || hasQuote {
-			quoteView
-		} else {
-			emptyStateView
+		Group {
+			if isPlaceholder || hasQuote {
+				quoteView
+			} else {
+				emptyStateView
+			}
 		}
+		.premiumLockedWidgetStyle(isLocked: entry.isLocked)
+		.widgetURL(entry.isLocked ? PremiumConfiguration.paywallURL : nil)
 	}
 
 	// MARK: - Quote View

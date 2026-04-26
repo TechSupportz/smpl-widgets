@@ -78,7 +78,8 @@ struct MonthCalendarWidgetView: View {
 			}
 			Spacer()
 		}
-		.widgetURL(URL(string: "smplwidgets://calendar"))
+		.premiumLockedWidgetStyle(isLocked: entry.isLocked)
+		.widgetURL(entry.isLocked ? PremiumConfiguration.paywallURL : URL(string: "smplwidgets://calendar"))
 	}
 }
 

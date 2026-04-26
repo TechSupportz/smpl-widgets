@@ -12,4 +12,19 @@ struct WeatherEntry: TimelineEntry {
 	let condition: String
 	let temperature: Measurement<UnitTemperature>
 	let symbol: String
+	let isLocked: Bool
+
+	init(
+		date: Date,
+		condition: String,
+		temperature: Measurement<UnitTemperature>,
+		symbol: String,
+		isLocked: Bool = false
+	) {
+		self.date = date
+		self.condition = condition
+		self.temperature = temperature
+		self.symbol = symbol
+		self.isLocked = isLocked
+	}
 }

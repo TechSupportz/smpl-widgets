@@ -14,20 +14,25 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 	typealias Intent = ImageSlotConfigurationIntent
 
 	private let storage = ImageWidgetStorage.shared
+	private let premiumPreviewImageData = UIImage(named: "ImagePreview")?.pngData()
 
 	func placeholder(in context: Context) -> ImageEntry {
-		ImageEntry(
-			date: .now,
-			imageData: nil,
-			isPlaceholder: true
+		premiumPreviewEntry(
+			tintImage: false,
+			isPlaceholder: true,
+			isLocked: !PremiumConfiguration.isUnlocked
 		)
 	}
 
 	func snapshot(for configuration: ImageSlotConfigurationIntent, in context: Context) async -> ImageEntry {
+		if !PremiumConfiguration.isUnlocked {
+			return premiumPreviewEntry(tintImage: configuration.tintImageEnabled)
+		}
+
 		if context.isPreview {
 			return ImageEntry(
 				date: .now,
-				imageData: UIImage(named: "ImagePreview")?.pngData(),
+				imageData: premiumPreviewImageData,
 				tintImage: configuration.tintImageEnabled
 			)
 		}
@@ -36,6 +41,11 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 	}
 
 	func timeline(for configuration: ImageSlotConfigurationIntent, in context: Context) async -> Timeline<ImageEntry> {
+		if !PremiumConfiguration.isUnlocked {
+			let entry = premiumPreviewEntry(tintImage: configuration.tintImageEnabled)
+			return Timeline(entries: [entry], policy: .never)
+		}
+
 		let entry = makeEntry(for: configuration, at: .now, family: context.family)
 		return Timeline(entries: [entry], policy: .never)
 	}
@@ -59,10 +69,25 @@ struct ImageTimelineProvider: AppIntentTimelineProvider {
 		}
 
 		return ImageEntry(
-			date: date,
-			imageData: imageData,
-			hasSavedImages: hasSavedImages,
-			tintImage: configuration.tintImageEnabled
+				date: date,
+				imageData: imageData,
+				hasSavedImages: hasSavedImages,
+				tintImage: configuration.tintImageEnabled
+			)
+		}
+
+	private func premiumPreviewEntry(
+		tintImage: Bool,
+		isPlaceholder: Bool = false,
+		isLocked: Bool = true
+	) -> ImageEntry {
+		ImageEntry(
+			date: .now,
+			imageData: premiumPreviewImageData,
+			hasSavedImages: true,
+			tintImage: tintImage,
+			isPlaceholder: isPlaceholder,
+			isLocked: isLocked
 		)
 	}
 }

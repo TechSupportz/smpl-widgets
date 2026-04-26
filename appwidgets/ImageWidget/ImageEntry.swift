@@ -14,18 +14,21 @@ struct ImageEntry: TimelineEntry {
 	let hasSavedImages: Bool
 	let tintImage: Bool
 	let isPlaceholder: Bool
+	let isLocked: Bool
 
 	init(
 		date: Date,
 		imageData: Data?,
 		hasSavedImages: Bool = false,
 		tintImage: Bool = false,
-		isPlaceholder: Bool = false
+		isPlaceholder: Bool = false,
+		isLocked: Bool = false
 	) {
 		self.date = date
 		self.imageData = imageData
 		self.hasSavedImages = hasSavedImages
 		self.tintImage = tintImage
 		self.isPlaceholder = isPlaceholder
+		self.isLocked = isLocked
 	}
 }

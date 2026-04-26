@@ -138,12 +138,19 @@ struct EventEntry: TimelineEntry {
 	let date: Date
 	let events: [WidgetEvent]
 	let authState: CalendarAuthState
+	let isLocked: Bool
 
 	/// Convenience initializer with default authorized state (for previews)
-	init(date: Date, events: [WidgetEvent], authState: CalendarAuthState = .authorized) {
+	init(
+		date: Date,
+		events: [WidgetEvent],
+		authState: CalendarAuthState = .authorized,
+		isLocked: Bool = false
+	) {
 		self.date = date
 		self.events = events
 		self.authState = authState
+		self.isLocked = isLocked
 	}
 
 	var todayEventCount: Int {

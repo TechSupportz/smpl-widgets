@@ -63,10 +63,15 @@ struct WeatherWidgetView: View {
 					alignment: .bottomTrailing
 				)
 		}
+		.premiumLockedWidgetStyle(isLocked: entry.isLocked)
 		.widgetURL(widgetURL)
 	}
 
 	private var widgetURL: URL {
+		if entry.isLocked {
+			return PremiumConfiguration.paywallURL
+		}
+
 		// If there's a location error, open smpl. app to grant permissions
 		// Otherwise, open Weather app
 		if entry.condition.contains("error") && entry.condition.contains("location") {

@@ -44,7 +44,7 @@ struct EventWidgetView: View {
 
 	var body: some View {
 		VStack(spacing: 0) {
-			if entry.isAuthorized {
+			if entry.isLocked || entry.isAuthorized {
 				authorizedLayoutView
 			} else {
 				permissionRequiredView
@@ -52,6 +52,7 @@ struct EventWidgetView: View {
 			bottomBar
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
+		.premiumLockedWidgetStyle(isLocked: entry.isLocked)
 		.widgetURL(widgetURL)
 	}
 
@@ -68,7 +69,11 @@ struct EventWidgetView: View {
 	}
 
 	private var widgetURL: URL {
-		URL(string: entry.isAuthorized ? "smplwidgets://events" : "smplwidgets://permissions")!
+		if entry.isLocked {
+			return PremiumConfiguration.paywallURL
+		}
+
+		return URL(string: entry.isAuthorized ? "smplwidgets://events" : "smplwidgets://permissions")!
 	}
 
 	// MARK: - Small Layout

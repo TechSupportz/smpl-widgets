@@ -62,6 +62,8 @@ final class SharedSettings: ObservableObject {
 	private let lastKnownLocationKey = "com.tnitish.smpl-widgets.lastKnownLocation"
 	private let widgetColorSchemeKey = "com.tnitish.smpl-widgets.widgetColorScheme"
 	private let mockDataEnabledKey = "com.tnitish.smpl-widgets.mockDataEnabled"
+	private let premiumUnlockedKey = "com.tnitish.smpl-widgets.premiumUnlocked"
+	private let premiumDisplayPriceKey = "com.tnitish.smpl-widgets.premiumDisplayPrice"
 
 	// Fixed refresh interval: 1 hour
 	let refreshInterval: TimeInterval = 3600
@@ -97,6 +99,35 @@ final class SharedSettings: ObservableObject {
 		set {
 			objectWillChange.send()
 			userDefaults.set(newValue, forKey: mockDataEnabledKey)
+		}
+	}
+
+	var isPremiumUnlocked: Bool {
+		get { userDefaults.bool(forKey: premiumUnlockedKey) }
+		set {
+			guard userDefaults.bool(forKey: premiumUnlockedKey) != newValue else {
+				return
+			}
+
+			objectWillChange.send()
+			userDefaults.set(newValue, forKey: premiumUnlockedKey)
+		}
+	}
+
+	var premiumDisplayPrice: String? {
+		get { userDefaults.string(forKey: premiumDisplayPriceKey) }
+		set {
+			guard userDefaults.string(forKey: premiumDisplayPriceKey) != newValue else {
+				return
+			}
+
+			objectWillChange.send()
+
+			if let newValue {
+				userDefaults.set(newValue, forKey: premiumDisplayPriceKey)
+			} else {
+				userDefaults.removeObject(forKey: premiumDisplayPriceKey)
+			}
 		}
 	}
 

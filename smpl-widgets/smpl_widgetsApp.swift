@@ -13,6 +13,7 @@ import os
 
 @main
 struct smpl_widgetsApp: App {
+	@State private var purchaseManager = PurchaseManager()
 	@State private var isRedirecting = false
 	@State private var launchedFromWidget = false
 	@State private var isCheckingLaunchSource = true
@@ -34,6 +35,7 @@ struct smpl_widgetsApp: App {
 				// Only show ContentView if confirmed NOT launched from widget
 				if !launchedFromWidget && !isRedirecting && !isCheckingLaunchSource {
 					ContentView(deepLinkTarget: $deepLinkTarget)
+						.environment(purchaseManager)
 				}
 
 				// Show loading during check, redirect, or widget launch
@@ -49,6 +51,9 @@ struct smpl_widgetsApp: App {
 						isCheckingLaunchSource = false
 					}
 				}
+			}
+			.task {
+				await purchaseManager.start()
 			}
 			.onOpenURL { url in
 				let scheme = url.scheme ?? ""
@@ -78,6 +83,11 @@ struct smpl_widgetsApp: App {
 						launchedFromWidget = false
 						isRedirecting = false
 						deepLinkTarget = nil
+					case "premium":
+						systemURL = nil
+						launchedFromWidget = false
+						isRedirecting = false
+						deepLinkTarget = PremiumConfiguration.paywallSectionID
 					case "events":
 						// Open Calendar app to today's date
 						let timestamp = Int(Date().timeIntervalSinceReferenceDate)
@@ -103,6 +113,12 @@ struct smpl_widgetsApp: App {
 
 				if newPhase == .background {
 					scheduleBackgroundRefresh()
+				}
+
+				if newPhase == .active {
+					Task {
+						await purchaseManager.refresh()
+					}
 				}
 			}
 		}
