@@ -9,26 +9,25 @@ import Foundation
 
 enum PremiumConfiguration {
 	static let productID = "unlockWidgets"
-	static let productDisplayName = "Unlock All Widgets"
+	static let productDisplayName = "smpl. widgets"
 
 	static let paywallTitle = "Unlock all widgets"
 	static let paywallSubtitle =
-		"Minimal Calendar stays free. Unlock premium widgets and customize your home screen."
-	static let unlockedTitle = "All widgets unlocked"
+		"Minimal Calendar is included free. One purchase unlocks everything else — weather, events, quotes, and more."
+	static let unlockedTitle = "You're all set"
 	static let unlockedSubtitle =
-		"Premium widgets are ready to add, configure, and pin to your home screen."
+		"All widgets are yours. Add them to your home screen anytime."
 
 	static let widgetOverlayTitle = "Unlock all widgets"
-	static let widgetOverlaySubtitle = "Tap to unlock in app"
-	static let restorePurchasesTitle = "Restore Purchases"
+	static let restorePurchasesTitle = "Restore Purchase"
 
 	static let purchaseSuccessMessage = "All widgets unlocked."
-	static let purchasePendingMessage = "Purchase pending approval."
-	static let restoreMissingMessage = "No previous unlock was found for this Apple Account."
-	static let unavailableMessage = "Unlock All Widgets is not available yet."
-	static let purchaseFailedMessage = "The purchase could not be completed."
-	static let restoreFailedMessage = "Restore Purchases could not be completed."
-	static let verificationFailedMessage = "The purchase could not be verified."
+	static let purchasePendingMessage = "Purchase submitted — widgets will unlock once it clears."
+	static let restoreMissingMessage = "No purchase found for this Apple Account."
+	static let unavailableMessage = "Purchase is not available right now. Try again later."
+	static let purchaseFailedMessage = "Something went wrong. Your card was not charged."
+	static let restoreFailedMessage = "Couldn't restore your purchase. Try again."
+	static let verificationFailedMessage = "Purchase verification failed. Contact support if this persists."
 
 	static let paywallSectionID = "premiumAccess"
 	static let paywallURL = URL(string: "smplwidgets://premium")!
@@ -63,7 +62,7 @@ enum PremiumConfiguration {
 			return paywallTitle
 		}
 
-		return "Unlock for \(priceText)"
+		return "Unlock all widgets for \(priceText)"
 	}
 }
 
