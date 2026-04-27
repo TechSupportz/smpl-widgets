@@ -14,9 +14,7 @@ struct PremiumUnlockCard: View {
 		VStack(alignment: .leading, spacing: 16) {
 			header
 
-			if purchaseManager.isPremiumUnlocked {
-				unlockedBody
-			} else {
+			if !purchaseManager.isPremiumUnlocked {
 				lockedBody
 			}
 		}
@@ -27,9 +25,9 @@ struct PremiumUnlockCard: View {
 
 	private var header: some View {
 		HStack(spacing: 16) {
-			Image(systemName: purchaseManager.isPremiumUnlocked ? "checkmark.seal.fill" : "lock.open.display")
+			Image(systemName: purchaseManager.isPremiumUnlocked ? "checkmark.seal.fill" : "lock.rectangle.stack.fill")
 				.font(.title2)
-				.foregroundStyle(purchaseManager.isPremiumUnlocked ? .green : .yellow)
+				.foregroundStyle(purchaseManager.isPremiumUnlocked ? .green : .orange)
 
 			VStack(alignment: .leading, spacing: 4) {
 				Text(
@@ -52,18 +50,11 @@ struct PremiumUnlockCard: View {
 		}
 	}
 
-	private var unlockedBody: some View {
-		Text(PremiumConfiguration.premiumFeatureNames.joined(separator: "  •  "))
-			.font(.callout)
-			.foregroundStyle(.secondary)
-			.frame(maxWidth: .infinity, alignment: .leading)
-	}
-
 	private var lockedBody: some View {
 		VStack(alignment: .leading, spacing: 16) {
-			LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+			LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
 				ForEach(PremiumConfiguration.premiumFeatureNames, id: \.self) { feature in
-					Label(feature, systemImage: "sparkles.rectangle.stack.fill")
+					Label(feature, systemImage: "widget.small")
 						.font(.subheadline)
 						.frame(maxWidth: .infinity, alignment: .leading)
 				}
@@ -110,7 +101,7 @@ private struct PremiumFeatureGateOverlay: View {
 			VStack(spacing: 12) {
 				Image(systemName: "lock.fill")
 					.font(.system(size: 26, weight: .semibold))
-					.foregroundStyle(.yellow)
+					.foregroundStyle(.orange)
 
 				Text(PremiumConfiguration.paywallTitle)
 					.font(.headline)
