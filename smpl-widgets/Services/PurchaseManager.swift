@@ -12,7 +12,6 @@ import WidgetKit
 
 enum PurchaseStatusTone: Equatable {
 	case info
-	case success
 	case error
 }
 
@@ -95,13 +94,12 @@ final class PurchaseManager {
 				let transaction = try Self.verifiedTransaction(from: verificationResult)
 				await transaction.finish()
 				await syncEntitlements()
-
-				statusMessage = PurchaseStatusMessage(
-					text: isPremiumUnlocked
-						? PremiumConfiguration.purchaseSuccessMessage
-						: PremiumConfiguration.verificationFailedMessage,
-					tone: isPremiumUnlocked ? .success : .error
-				)
+				statusMessage = isPremiumUnlocked
+					? nil
+					: PurchaseStatusMessage(
+						text: PremiumConfiguration.verificationFailedMessage,
+						tone: .error
+					)
 			case .pending:
 				statusMessage = PurchaseStatusMessage(
 					text: PremiumConfiguration.purchasePendingMessage,
@@ -134,17 +132,17 @@ final class PurchaseManager {
 			isRestoring = false
 		}
 
-		do {
-			try await AppStore.sync()
-			await syncEntitlements()
+			do {
+				try await AppStore.sync()
+				await syncEntitlements()
 
-			statusMessage = PurchaseStatusMessage(
-				text: isPremiumUnlocked
-					? PremiumConfiguration.purchaseSuccessMessage
-					: PremiumConfiguration.restoreMissingMessage,
-				tone: isPremiumUnlocked ? .success : .info
-			)
-		} catch {
+				if !isPremiumUnlocked {
+					statusMessage = PurchaseStatusMessage(
+						text: PremiumConfiguration.restoreMissingMessage,
+						tone: .info
+					)
+				}
+			} catch {
 			statusMessage = PurchaseStatusMessage(
 				text: Self.message(for: error, fallback: PremiumConfiguration.restoreFailedMessage),
 				tone: .error

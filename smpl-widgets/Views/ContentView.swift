@@ -128,8 +128,11 @@ struct ContentView: View {
 				ScrollViewReader { proxy in
 					ScrollView(.vertical) {
 						VStack(spacing: 16) {
-							PremiumUnlockCard()
-								.id(premiumAccessSectionID)
+							if !purchaseManager.isPremiumUnlocked {
+								PremiumUnlockCard()
+									.id(premiumAccessSectionID)
+									.transition(.opacity)
+							}
 
 							appearanceSettingsCard()
 
@@ -179,6 +182,7 @@ struct ContentView: View {
 						}
 						.padding(.horizontal)
 					}
+					.animation(.easeOut(duration: 0.25), value: purchaseManager.isPremiumUnlocked)
 					.onAppear {
 						// Refresh status when view appears (e.g., returning from Settings)
 						locationService.refreshAuthorizationStatus()

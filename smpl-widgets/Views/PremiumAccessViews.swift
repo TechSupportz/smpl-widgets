@@ -13,10 +13,7 @@ struct PremiumUnlockCard: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: 16) {
 			header
-
-			if !purchaseManager.isPremiumUnlocked {
-				lockedBody
-			}
+			lockedBody
 		}
 		.padding(.vertical, 16)
 		.padding(.horizontal, 24)
@@ -25,23 +22,15 @@ struct PremiumUnlockCard: View {
 
 	private var header: some View {
 		HStack(spacing: 16) {
-			Image(systemName: purchaseManager.isPremiumUnlocked ? "checkmark.seal.fill" : "lock.rectangle.stack.fill")
+			Image(systemName: "lock.rectangle.stack.fill")
 				.font(.title2)
-				.foregroundStyle(purchaseManager.isPremiumUnlocked ? .green : .orange)
+				.foregroundStyle(.orange)
 
 			VStack(alignment: .leading, spacing: 4) {
-				Text(
-					purchaseManager.isPremiumUnlocked
-						? PremiumConfiguration.unlockedTitle
-						: PremiumConfiguration.paywallTitle
-				)
+				Text(PremiumConfiguration.paywallTitle)
 				.font(.headline)
 
-				Text(
-					purchaseManager.isPremiumUnlocked
-						? PremiumConfiguration.unlockedSubtitle
-						: PremiumConfiguration.paywallSubtitle
-				)
+				Text(PremiumConfiguration.paywallSubtitle)
 				.font(.subheadline)
 				.foregroundStyle(.secondary)
 			}
@@ -159,10 +148,7 @@ private struct PremiumPurchaseActions: View {
 			}
 
 			if let statusMessage = purchaseManager.statusMessage {
-				Text(statusMessage.text)
-					.font(.caption)
-					.foregroundStyle(color(for: statusMessage.tone))
-					.multilineTextAlignment(.center)
+				StatusMessageBanner(statusMessage: statusMessage)
 			}
 		}
 	}
@@ -174,15 +160,54 @@ private struct PremiumPurchaseActions: View {
 
 		return purchaseManager.purchaseButtonTitle
 	}
+}
 
-	private func color(for tone: PurchaseStatusTone) -> Color {
-		switch tone {
+private struct StatusMessageBanner: View {
+	let statusMessage: PurchaseStatusMessage
+
+	var body: some View {
+		HStack(alignment: .center, spacing: 10) {
+			Image(systemName: iconName)
+				.font(.subheadline.weight(.semibold))
+				.foregroundStyle(color)
+
+			Text(statusMessage.text)
+				.font(.caption)
+				.foregroundStyle(.primary)
+				.multilineTextAlignment(.leading)
+
+			Spacer(minLength: 0)
+		}
+		.padding(.horizontal, 12)
+		.padding(.vertical, 10)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.background(backgroundColor, in: .rect(cornerRadius: 14.0))
+	}
+
+	private var iconName: String {
+		switch statusMessage.tone {
+		case .info:
+			return "clock.badge"
+		case .error:
+			return "exclamationmark.triangle.fill"
+		}
+	}
+
+	private var color: Color {
+		switch statusMessage.tone {
 		case .info:
 			return .secondary
-		case .success:
-			return .green
 		case .error:
 			return .red
+		}
+	}
+
+	private var backgroundColor: Color {
+		switch statusMessage.tone {
+		case .info:
+			return .secondary.opacity(0.12)
+		case .error:
+			return .red.opacity(0.12)
 		}
 	}
 }
