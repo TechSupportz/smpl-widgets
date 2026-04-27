@@ -9,7 +9,7 @@ import Foundation
 
 enum PremiumConfiguration {
 	static let productID = "unlockWidgets"
-	static let productDisplayName = "smpl. widgets"
+	static let productDisplayName = "Unlock All Widgets"
 
 	static let paywallTitle = "Unlock all widgets"
 	static let paywallSubtitle =
