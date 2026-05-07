@@ -58,14 +58,15 @@ struct ImageCropEditorView: View {
 	// MARK: - Scrollable Content
 
 	private var scrollContent: some View {
-		ScrollView(.vertical) {
-			VStack(spacing: 20) {
-				tabPicker
-				cropEditor
-				previewSection
-				controls
+		GeometryReader { geometry in
+			ScrollView(.vertical) {
+				VStack(spacing: 20) {
+					tabPicker
+					cropEditor(containerWidth: geometry.size.width - ImageCropEditorLayout.horizontalPadding * 2)
+					controls
+				}
+				.padding(.bottom, 32)
 			}
-			.padding(.bottom, 32)
 		}
 	}
 
@@ -83,12 +84,11 @@ struct ImageCropEditorView: View {
 
 	// MARK: - Crop Editor Canvas
 
-	private var cropEditor: some View {
+	private func cropEditor(containerWidth: CGFloat) -> some View {
 		GeometryReader { geo in
 			let containerSize = geo.size
 			let maskAspect = selectedGroup.maskAspectRatio
-			let maskW = containerSize.width * 0.8
-			let maskH = maskW / maskAspect
+			let maskSize = cropMaskSize(containerSize: containerSize, maskAspect: maskAspect)
 			let renderedSize = renderedImageSize(
 				containerSize: containerSize,
 				imageSize: originalImage.size,
@@ -110,10 +110,10 @@ struct ImageCropEditorView: View {
 						with: .color(.black.opacity(0.5))
 					)
 					let holeRect = CGRect(
-						x: (size.width - maskW) / 2,
-						y: (size.height - maskH) / 2,
-						width: maskW,
-						height: maskH
+						x: (size.width - maskSize.width) / 2,
+						y: (size.height - maskSize.height) / 2,
+						width: maskSize.width,
+						height: maskSize.height
 					)
 					context.blendMode = .clear
 					context.fill(
@@ -124,10 +124,10 @@ struct ImageCropEditorView: View {
 
 				RoundedRectangle(cornerRadius: 20)
 					.stroke(.white, lineWidth: 2)
-					.frame(width: maskW, height: maskH)
-				}
-				.clipped()
-				.contentShape(Rectangle())
+					.frame(width: maskSize.width, height: maskSize.height)
+			}
+			.clipped()
+			.contentShape(Rectangle())
 			.gesture(
 				SimultaneousGesture(
 					MagnifyGesture()
@@ -172,68 +172,14 @@ struct ImageCropEditorView: View {
 				}
 			}
 		.frame(maxWidth: .infinity)
-		.frame(height: 350)
-		.padding(.horizontal)
-		.clipShape(.rect(cornerRadius: 16))
-	}
-
-	// MARK: - Preview
-
-	private var previewSection: some View {
-		VStack(spacing: 8) {
-			Text("Preview")
-				.font(.caption)
-				.foregroundStyle(.secondary)
-				.textCase(.uppercase)
-
-			previewWidgetFrame(
-				crop: currentLiveCrop,
-				aspect: selectedGroup.maskAspectRatio
-			)
-		}
-		.padding(.horizontal)
-	}
-
-	@ViewBuilder
-	private func previewWidgetFrame(crop: CropRect, aspect: CGFloat) -> some View {
-		let frameW: CGFloat = 160
-		let frameH = frameW / aspect
-		let cropPixel = CGRect(
-			x: crop.x * originalImage.size.width,
-			y: crop.y * originalImage.size.height,
-			width: crop.width * originalImage.size.width,
-			height: crop.height * originalImage.size.height
-		)
-
-		if let cgImage = originalImage.cgImage?.cropping(to: cropPixel) {
-			let cropped = UIImage(cgImage: cgImage)
-			ZStack {
-				RoundedRectangle(cornerRadius: 24, style: .continuous)
-					.fill(.gray.opacity(0.15))
-					.frame(width: frameW + 6, height: frameH + 6)
-					.shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
-
-				Image(uiImage: cropped)
-					.resizable()
-					.scaledToFill()
-					.frame(width: frameW, height: frameH)
-					.clipShape(.rect(cornerRadius: 20))
-			}
-		}
-	}
-
-	private var currentLiveCrop: CropRect {
-		guard editorContainerSize != .zero else {
-			return CropRect.defaultCrop(
-				imageSize: originalImage.size,
+		.frame(
+			height: cropEditorHeight(
+				containerWidth: containerWidth,
 				maskAspect: selectedGroup.maskAspectRatio
 			)
-		}
-		return computeCropRect(
-			containerSize: editorContainerSize,
-			imageSize: originalImage.size,
-			maskAspect: selectedGroup.maskAspectRatio
 		)
+		.padding(.horizontal)
+		.clipShape(.rect(cornerRadius: 16))
 	}
 
 	// MARK: - Controls
@@ -358,15 +304,15 @@ struct ImageCropEditorView: View {
 		imageSize: CGSize,
 		maskAspect: CGFloat
 	) -> (scale: CGFloat, offset: CGSize) {
-		let maskW = containerSize.width * 0.8
+		let maskSize = cropMaskSize(containerSize: containerSize, maskAspect: maskAspect)
+		let maskW = maskSize.width
 		let baseScale = max(containerSize.width / imageSize.width, containerSize.height / imageSize.height)
 		let scaleVal = maskW / (crop.width * imageSize.width * baseScale)
 		let renderedW = imageSize.width * baseScale * scaleVal
 		let renderedH = imageSize.height * baseScale * scaleVal
-		let maskH = maskW / maskAspect
 
 		let maskLeft = (containerSize.width - maskW) / 2
-		let maskTop = (containerSize.height - maskH) / 2
+		let maskTop = (containerSize.height - maskSize.height) / 2
 
 		let offsetX = maskLeft - containerSize.width / 2 - (crop.x - 0.5) * renderedW
 		let offsetY = maskTop - containerSize.height / 2 - (crop.y - 0.5) * renderedH
@@ -379,8 +325,9 @@ struct ImageCropEditorView: View {
 		imageSize: CGSize,
 		maskAspect: CGFloat
 	) -> CropRect {
-		let maskW = containerSize.width * 0.8
-		let maskH = maskW / maskAspect
+		let maskSize = cropMaskSize(containerSize: containerSize, maskAspect: maskAspect)
+		let maskW = maskSize.width
+		let maskH = maskSize.height
 		let baseScale = max(containerSize.width / imageSize.width, containerSize.height / imageSize.height)
 		let renderedW = imageSize.width * baseScale * scale
 		let renderedH = imageSize.height * baseScale * scale
@@ -402,8 +349,9 @@ struct ImageCropEditorView: View {
 	}
 
 	private func applyClamping(containerSize: CGSize, maskAspect: CGFloat) {
-		let maskW = containerSize.width * 0.8
-		let maskH = maskW / maskAspect
+		let maskSize = cropMaskSize(containerSize: containerSize, maskAspect: maskAspect)
+		let maskW = maskSize.width
+		let maskH = maskSize.height
 		let baseScale = max(containerSize.width / originalImage.size.width, containerSize.height / originalImage.size.height)
 		let minScaleW = maskW / (originalImage.size.width * baseScale)
 		let minScaleH = maskH / (originalImage.size.height * baseScale)
@@ -429,6 +377,38 @@ struct ImageCropEditorView: View {
 			height: maskTop - containerSize.height / 2 - (normY - 0.5) * renderedH
 		)
 	}
+
+	private func cropEditorHeight(containerWidth: CGFloat, maskAspect: CGFloat) -> CGFloat {
+		let safeWidth = max(0, containerWidth)
+		let targetMaskWidth = safeWidth * ImageCropEditorLayout.maskWidthRatio
+		let targetHeight = targetMaskWidth / maskAspect + ImageCropEditorLayout.verticalMaskPadding
+
+		return min(
+			ImageCropEditorLayout.maximumHeight,
+			max(ImageCropEditorLayout.minimumHeight, targetHeight)
+		)
+	}
+
+	private func cropMaskSize(containerSize: CGSize, maskAspect: CGFloat) -> CGSize {
+		guard containerSize.width > 0, containerSize.height > 0, maskAspect > 0 else {
+			return .zero
+		}
+
+		let widthLimit = containerSize.width * ImageCropEditorLayout.maskWidthRatio
+		let heightLimit = containerSize.height * ImageCropEditorLayout.maskHeightRatio
+		let width = min(widthLimit, heightLimit * maskAspect)
+
+		return CGSize(width: width, height: width / maskAspect)
+	}
+}
+
+private enum ImageCropEditorLayout {
+	static let horizontalPadding: CGFloat = 16
+	static let maskWidthRatio: CGFloat = 0.8
+	static let maskHeightRatio: CGFloat = 0.86
+	static let verticalMaskPadding: CGFloat = 48
+	static let minimumHeight: CGFloat = 300
+	static let maximumHeight: CGFloat = 560
 }
 
 // MARK: - Preview Helpers
