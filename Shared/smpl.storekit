@@ -15,7 +15,7 @@
   ],
   "products" : [
     {
-      "displayPrice" : "1.99",
+      "displayPrice" : "2.99",
       "familyShareable" : true,
       "internalID" : "6763971293",
       "localizations" : [
@@ -38,7 +38,7 @@
     "_developerTeamID" : "Q5UAL6TUVS",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 798952278.15764594,
+    "_lastSynchronizedDate" : 799825077.37287605,
     "_locale" : "en_US",
     "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",
