@@ -139,18 +139,21 @@ struct EventEntry: TimelineEntry {
 	let events: [WidgetEvent]
 	let authState: CalendarAuthState
 	let isLocked: Bool
+	let upcomingWindowDays: Int
 
 	/// Convenience initializer with default authorized state (for previews)
 	init(
 		date: Date,
 		events: [WidgetEvent],
 		authState: CalendarAuthState = .authorized,
-		isLocked: Bool = false
+		isLocked: Bool = false,
+		upcomingWindowDays: Int = 14
 	) {
 		self.date = date
 		self.events = events
 		self.authState = authState
 		self.isLocked = isLocked
+		self.upcomingWindowDays = upcomingWindowDays
 	}
 
 	var todayEventCount: Int {
@@ -221,14 +224,18 @@ struct EventEntry: TimelineEntry {
 
 	// MARK: - Upcoming Events Logic
 
-	/// Events within today + 14 days (flat upcoming events list)
+	/// Events within the widget family's upcoming window (flat upcoming events list)
 	var upcomingEvents: [WidgetEvent] {
 		let calendar = Calendar.current
 		let startOfToday = calendar.startOfDay(for: date)
-		let startOfAfterWeek = calendar.date(byAdding: .day, value: 14, to: startOfToday)!
+		let startOfAfterWindow = calendar.date(
+			byAdding: .day,
+			value: upcomingWindowDays,
+			to: startOfToday
+		)!
 
 		return events.filter { event in
-			event.overlaps(start: startOfToday, end: startOfAfterWeek)
+			event.overlaps(start: startOfToday, end: startOfAfterWindow)
 		}
 	}
 
@@ -242,7 +249,7 @@ struct EventEntry: TimelineEntry {
 	var upcomingDaysEvents: [(date: Date, events: [WidgetEvent])] {
 		let calendar = Calendar.current
 		let today = calendar.startOfDay(for: date)
-		let endOfRange = calendar.date(byAdding: .day, value: 14, to: today)!
+		let endOfRange = calendar.date(byAdding: .day, value: upcomingWindowDays, to: today)!
 
 		return Dictionary(grouping: upcomingEvents) {
 			$0.upcomingDisplayDay(relativeTo: date, calendar: calendar)

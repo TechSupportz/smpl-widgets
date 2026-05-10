@@ -33,8 +33,17 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		let authState = CalendarAuthState(from: status)
 
 		if authState == .authorized {
-			let upcomingEvents = fetchUpcomingEvents(for: configuration)
-			return EventEntry(date: Date(), events: upcomingEvents, authState: authState)
+			let eventWindowDays = Self.eventWindowDays(for: context.family)
+			let upcomingEvents = fetchUpcomingEvents(
+				for: configuration,
+				windowDays: eventWindowDays
+			)
+			return EventEntry(
+				date: Date(),
+				events: upcomingEvents,
+				authState: authState,
+				upcomingWindowDays: eventWindowDays
+			)
 		} else {
 			return EventEntry(date: Date(), events: [], authState: authState)
 		}
@@ -62,7 +71,11 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 
 		switch authState {
 		case .authorized:
-			let upcomingEvents = fetchUpcomingEvents(for: configuration)
+			let eventWindowDays = Self.eventWindowDays(for: context.family)
+			let upcomingEvents = fetchUpcomingEvents(
+				for: configuration,
+				windowDays: eventWindowDays
+			)
 
 			// Calculate update dates based on event start/end times and 10-min post-end buffer
 			var updateDates: Set<Date> = []
@@ -104,12 +117,22 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 
 			// Entry for right now
 			entries.append(
-				EventEntry(date: currentDate, events: upcomingEvents, authState: authState))
+				EventEntry(
+					date: currentDate,
+					events: upcomingEvents,
+					authState: authState,
+					upcomingWindowDays: eventWindowDays
+				))
 
 			// Entries for future updates
 			for updateDate in futureUpdates {
 				entries.append(
-					EventEntry(date: updateDate, events: upcomingEvents, authState: authState))
+					EventEntry(
+						date: updateDate,
+						events: upcomingEvents,
+						authState: authState,
+						upcomingWindowDays: eventWindowDays
+					))
 			}
 
 			// Use .atEnd policy so widget requests new timeline after the last entry
@@ -131,22 +154,36 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		}
 	}
 
-	private func fetchUpcomingEvents(for configuration: EventConfigurationIntent) -> [WidgetEvent] {
+	private func fetchUpcomingEvents(
+		for configuration: EventConfigurationIntent,
+		windowDays: Int
+	) -> [WidgetEvent] {
 		let calendar = Calendar.current
 		let now = Date()
 		let startOfDay = calendar.startOfDay(for: now)
-		let endOfWeek = calendar.date(byAdding: .day, value: 15, to: startOfDay)
-			?? now.addingTimeInterval(15 * 86_400)
+		let endOfWindow = calendar.date(byAdding: .day, value: windowDays, to: startOfDay)
+			?? now.addingTimeInterval(TimeInterval(windowDays * 86_400))
 		let eventStore = EKEventStore()
 
 		let predicate = eventStore.predicateForEvents(
 			withStart: startOfDay,
-			end: endOfWeek,
+			end: endOfWindow,
 			calendars: selectedCalendars(for: configuration)
 		)
 
 		let ekEvents = eventStore.events(matching: predicate)
 		return ekEvents.map { WidgetEvent(from: $0) }
+	}
+
+	private static func eventWindowDays(for family: WidgetFamily) -> Int {
+		switch family {
+		case .systemSmall:
+			return 1
+		case .systemLarge:
+			return 30
+		default:
+			return 14
+		}
 	}
 
 	private func selectedCalendars(for configuration: EventConfigurationIntent) -> [EKCalendar]? {
