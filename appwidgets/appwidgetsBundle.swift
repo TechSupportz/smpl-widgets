@@ -17,5 +17,6 @@ struct AppWidgetsBundle: WidgetBundle {
 		WeatherWidget()
 		QuoteWidget()
 		ImageWidget()
+		DateTimeControlWidget()
 	}
 }
