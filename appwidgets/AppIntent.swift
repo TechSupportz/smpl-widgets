@@ -108,7 +108,7 @@ struct CalendarEntityQuery: EntityQuery {
 	@MainActor
 	private func availableCalendars() -> [CalendarEntity] {
 		let eventStore = EKEventStore()
-		
+
 		return eventStore.calendars(for: .event)
 			.sorted { first, second in
 				let titleComparison = first.title.localizedCaseInsensitiveCompare(second.title)
@@ -168,6 +168,85 @@ struct ImageSlotConfigurationIntent: WidgetConfigurationIntent {
 	}
 }
 
+enum CountdownAccent: String, CaseIterable {
+	case red
+	case orange
+	case yellow
+	case green
+	case mint
+	case teal
+	case cyan
+	case blue
+	case indigo
+	case purple
+	case pink
+	case brown
+	case monochrome
+
+	var displayName: String {
+		rawValue.capitalized
+	}
+}
+
+struct CountdownAccentOptionsProvider: DynamicOptionsProvider {
+	func results() async throws -> [String] {
+		CountdownAccent.allCases.map(\.displayName)
+	}
+
+	func defaultResult() async -> String? {
+		CountdownAccent.teal.displayName
+	}
+}
+
+struct CountdownConfigurationIntent: WidgetConfigurationIntent {
+	static var title: LocalizedStringResource { "Countdown" }
+	static var description: IntentDescription {
+		"Choose an event and its countdown dates. Enter dates as DDMMYYYY."
+	}
+
+	@Parameter(title: "Event Name")
+	var eventName: String?
+
+	@Parameter(
+		title: "Start Date",
+		default: "Today",
+		inputOptions: String.IntentInputOptions(
+			keyboardType: .numberPad,
+			capitalizationType: .none,
+			autocorrect: false,
+			smartQuotes: false,
+			smartDashes: false
+		)
+	)
+	var startDate: String?
+
+	@Parameter(
+		title: "End Date",
+		inputOptions: String.IntentInputOptions(
+			keyboardType: .numberPad,
+			capitalizationType: .none,
+			autocorrect: false,
+			smartQuotes: false,
+			smartDashes: false
+		)
+	)
+	var endDate: String?
+
+	@Parameter(
+		title: "Accent Color",
+		optionsProvider: CountdownAccentOptionsProvider()
+	)
+	var accentName: String?
+
+	static var parameterSummary: some ParameterSummary {
+		Summary("Countdown \(\.$eventName)") {
+			\.$startDate
+			\.$endDate
+			\.$accentName
+		}
+	}
+}
+
 extension ImageSlotConfigurationIntent {
 	var tintImageEnabled: Bool {
 		tintImage ?? false
@@ -177,5 +256,78 @@ extension ImageSlotConfigurationIntent {
 extension QuoteConfigurationIntent {
 	var quoteText: String {
 		quote?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+	}
+}
+
+extension CountdownConfigurationIntent {
+	var displayTitle: String {
+		let title = eventName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+		return title.isEmpty ? "Countdown" : title
+	}
+
+	var resolvedAccent: CountdownAccent {
+		guard let accentName else {
+			return .teal
+		}
+
+		return CountdownAccent(rawValue: accentName.lowercased()) ?? .teal
+	}
+
+	func resolvedStartDate(
+		relativeTo currentDate: Date,
+		calendar: Calendar = .current
+	) -> Date {
+		if startDate?.trimmingCharacters(in: .whitespacesAndNewlines)
+			.localizedCaseInsensitiveCompare("Today") == .orderedSame
+		{
+			return currentDate
+		}
+
+		return date(from: startDate, calendar: calendar) ?? currentDate
+	}
+
+	func resolvedEndDate(calendar: Calendar = .current) -> Date? {
+		date(from: endDate, calendar: calendar)
+	}
+
+	private func date(from input: String?, calendar: Calendar) -> Date? {
+		guard let input else {
+			return nil
+		}
+
+		let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard value.count == 8, value.allSatisfy({ $0.isASCII && $0.isNumber }) else {
+			return nil
+		}
+
+		guard
+			let day = Int(value.prefix(2)),
+			let month = Int(value.dropFirst(2).prefix(2)),
+			let year = Int(value.suffix(4))
+		else {
+			return nil
+		}
+
+		var components = DateComponents()
+		components.calendar = calendar
+		components.timeZone = calendar.timeZone
+		components.year = year
+		components.month = month
+		components.day = day
+
+		guard let date = calendar.date(from: components) else {
+			return nil
+		}
+
+		let resolvedComponents = calendar.dateComponents([.year, .month, .day], from: date)
+		guard
+			resolvedComponents.year == year,
+			resolvedComponents.month == month,
+			resolvedComponents.day == day
+		else {
+			return nil
+		}
+
+		return date
 	}
 }
