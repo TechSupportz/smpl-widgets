@@ -5,20 +5,16 @@
 //  Created by Nitish on 22/03/26.
 //
 
-import Photos
 import PhotosUI
 import SwiftUI
 import UIKit
 import WidgetKit
 
 struct ImageWidgetSettingsCard: View {
-	let authorizationStatus: PHAuthorizationStatus
 	let isSaving: Bool
 	let slots: [ImageSlotMetadata]
-	let permissionButtonTitle: String
 
 	var selectedImageSlotItem: Binding<PhotosPickerItem?>
-	var onPermissionTap: () -> Void
 	var onDeleteSlot: (ImageSlotMetadata) -> Void
 	var onCropSaved: () -> Void
 
@@ -26,55 +22,8 @@ struct ImageWidgetSettingsCard: View {
 
 	private let slotListMaxHeight: CGFloat = 280
 
-	private var isAuthorized: Bool {
-		authorizationStatus == .authorized || authorizationStatus == .limited
-	}
-
-	private var statusIcon: String {
-		switch authorizationStatus {
-		case .authorized, .limited:
-			return "photo.fill.on.rectangle.fill"
-		case .denied, .restricted:
-			return "photo.slash"
-		case .notDetermined:
-			return "photo"
-		@unknown default:
-			return "photo"
-		}
-	}
-
-	private var statusColor: Color {
-		switch authorizationStatus {
-		case .authorized, .limited:
-			return .blue
-		case .denied, .restricted:
-			return .red
-		case .notDetermined:
-			return .orange
-		@unknown default:
-			return .gray
-		}
-	}
-
-	private var statusText: String {
-		switch authorizationStatus {
-		case .authorized:
-			return "Enabled for saved image slots"
-		case .limited:
-			return "Limited photo access enabled"
-		case .denied:
-			return "Denied - Enable in Settings"
-		case .restricted:
-			return "Restricted by system"
-		case .notDetermined:
-			return "Not configured"
-		@unknown default:
-			return "Unknown status"
-		}
-	}
-
 	private var displayedSlots: [ImageSlotMetadata] {
-		Array(slots.reversed())
+		slots
 	}
 
 	private var activeEditingSlot: ImageSlotMetadata? {
@@ -89,37 +38,31 @@ struct ImageWidgetSettingsCard: View {
 	var body: some View {
 		VStack(spacing: 16) {
 			HStack(spacing: 16) {
-				Image(systemName: statusIcon)
+				Image(systemName: "photo.fill.on.rectangle.fill")
 					.font(.title2)
-					.foregroundStyle(statusColor)
+					.foregroundStyle(.blue)
 
 				VStack(alignment: .leading, spacing: 4) {
 					Text("Image Widget")
 						.font(.headline)
-					Text(statusText)
+					Text("Choose photos without granting full library access")
 						.font(.subheadline)
 						.foregroundStyle(.secondary)
 				}
 				Spacer()
 			}
 
-			if !isAuthorized {
-				Button(permissionButtonTitle) {
-					onPermissionTap()
-				}
-				.buttonStyle(.automatic)
-			} else {
-				Text(
-					"Add photos here, then long-press the widget on your home screen to choose what's displayed."
-				)
-				.foregroundStyle(.secondary)
-				.frame(maxWidth: .infinity, alignment: .leading)
+			Text(
+				"Add photos here, then long-press the widget on your home screen to choose what's displayed."
+			)
+			.foregroundStyle(.secondary)
+			.frame(maxWidth: .infinity, alignment: .leading)
 
-				if slots.isEmpty {
-					Text("Saved Images")
-						.font(.callout)
-						.foregroundStyle(.secondary)
-						.frame(maxWidth: .infinity, alignment: .leading)
+			if slots.isEmpty {
+				Text("No saved images yet")
+					.font(.callout)
+					.foregroundStyle(.secondary)
+					.frame(maxWidth: .infinity, alignment: .leading)
 			} else {
 				ScrollView(.vertical) {
 					VStack(spacing: 12) {
@@ -134,56 +77,58 @@ struct ImageWidgetSettingsCard: View {
 				.contentMargins(.bottom, 8)
 				.mask {
 					VStack(spacing: 0) {
-						LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
-							.frame(height: 8)
+						LinearGradient(
+							colors: [.clear, .black], startPoint: .top, endPoint: .bottom
+						)
+						.frame(height: 8)
 						Color.black
-						LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
-							.frame(height: 8)
+						LinearGradient(
+							colors: [.black, .clear], startPoint: .top, endPoint: .bottom
+						)
+						.frame(height: 8)
 					}
 				}
 			}
-				
-				PhotosPicker(
-					selection: selectedImageSlotItem,
-					matching: .images,
-					photoLibrary: .shared()
-				) {
-					Label(
-						isSaving ? "Saving..." : "Add Image",
-						systemImage: "photo.badge.plus.fill"
-					)
-					.padding(.vertical, 8)
-				}
-				.disabled(isSaving)
+
+			PhotosPicker(
+				selection: selectedImageSlotItem,
+				matching: .images
+			) {
+				Label(
+					isSaving ? "Saving..." : "Add Image",
+					systemImage: "photo.badge.plus.fill"
+				)
+				.padding(.vertical, 8)
 			}
+			.disabled(isSaving)
 		}
 		.padding(.vertical, 16)
 		.padding(.horizontal, 24)
 		.glassEffect(in: .rect(cornerRadius: 24.0))
-			.sheet(
-				isPresented: Binding(
-					get: { activeEditingSlot != nil },
-					set: { isPresented in
-						if !isPresented {
-							editingSlotID = nil
-						}
+		.sheet(
+			isPresented: Binding(
+				get: { activeEditingSlot != nil },
+				set: { isPresented in
+					if !isPresented {
+						editingSlotID = nil
+					}
+				}
+			)
+		) {
+			if let slot = activeEditingSlot,
+				let data = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
+				let image = UIImage(data: data)
+			{
+				ImageCropEditorView(
+					slot: slot,
+					image: image,
+					onSave: {
+						onCropSaved()
+						WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
 					}
 				)
-			) {
-				if let slot = activeEditingSlot,
-				   let data = ImageWidgetStorage.shared.imageData(forSlotID: slot.id),
-				   let image = UIImage(data: data)
-				{
-					ImageCropEditorView(
-						slot: slot,
-						image: image,
-						onSave: {
-							onCropSaved()
-							WidgetCenter.shared.reloadTimelines(ofKind: "ImageWidget")
-						}
-					)
-				}
 			}
+		}
 	}
 
 	private func slotRow(_ slot: ImageSlotMetadata) -> some View {
@@ -194,14 +139,13 @@ struct ImageWidgetSettingsCard: View {
 				.font(.body)
 				.frame(maxWidth: .infinity, alignment: .leading)
 
-				Button {
-					editingSlotID = slot.id
-				} label: {
+			Button {
+				editingSlotID = slot.id
+			} label: {
 				Image(systemName: "crop")
 					.font(.body)
 			}
 			.buttonStyle(.borderless)
-
 
 			Button(role: .destructive) {
 				onDeleteSlot(slot)
@@ -257,42 +201,22 @@ private let mockSlots: [ImageSlotMetadata] = [
 	),
 ]
 
-#Preview("Not authorized") {
+#Preview("Empty") {
 	ImageWidgetSettingsCard(
-		authorizationStatus: .notDetermined,
 		isSaving: false,
 		slots: [],
-		permissionButtonTitle: "Enable Photos",
 		selectedImageSlotItem: .constant(nil),
-		onPermissionTap: {},
 		onDeleteSlot: { _ in },
 		onCropSaved: {}
 	)
 	.padding()
 }
 
-#Preview("Authorized - empty") {
+#Preview("With slots") {
 	ImageWidgetSettingsCard(
-		authorizationStatus: .authorized,
-		isSaving: false,
-		slots: [],
-		permissionButtonTitle: "Enable Photos",
-		selectedImageSlotItem: .constant(nil),
-		onPermissionTap: {},
-		onDeleteSlot: { _ in },
-		onCropSaved: {}
-	)
-	.padding()
-}
-
-#Preview("Authorized - with slots") {
-	ImageWidgetSettingsCard(
-		authorizationStatus: .authorized,
 		isSaving: false,
 		slots: mockSlots,
-		permissionButtonTitle: "Enable Photos",
 		selectedImageSlotItem: .constant(nil),
-		onPermissionTap: {},
 		onDeleteSlot: { _ in },
 		onCropSaved: {}
 	)
@@ -301,12 +225,9 @@ private let mockSlots: [ImageSlotMetadata] = [
 
 #Preview("Saving in progress") {
 	ImageWidgetSettingsCard(
-		authorizationStatus: .authorized,
 		isSaving: true,
 		slots: mockSlots,
-		permissionButtonTitle: "Enable Photos",
 		selectedImageSlotItem: .constant(nil),
-		onPermissionTap: {},
 		onDeleteSlot: { _ in },
 		onCropSaved: {}
 	)

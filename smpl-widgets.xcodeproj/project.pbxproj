@@ -50,6 +50,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7E9900027E9900027E990002 /* Exceptions for "Shared" folder in "smpl-widgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				smpl.storekit,
+			);
+			target = 7EA1FA7F2EC347D000460DD6 /* smpl-widgets */;
+		};
+		7E9900037E9900037E990003 /* Exceptions for "Shared" folder in "appwidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				smpl.storekit,
+			);
+			target = 7EA1FA912EC347F700460DD6 /* appwidgetsExtension */;
+		};
 		7EA1FAA72EC347FA00460DD6 /* Exceptions for "appwidgets" folder in "appwidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -69,6 +83,10 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7E9900017E9900017E990001 /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7E9900027E9900027E990002 /* Exceptions for "Shared" folder in "smpl-widgets" target */,
+				7E9900037E9900037E990003 /* Exceptions for "Shared" folder in "appwidgetsExtension" target */,
+			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
@@ -405,7 +423,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "smpl-widgets.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -413,9 +431,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Used to display your calendar events in the widget";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to let you pick photos and albums for the image widget";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Calendar access lets the Events widget show upcoming events. Calendar data stays on this device.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to fetch local forecasts from Apple WeatherKit for the Weather widget.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -425,7 +442,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tnitish.smpl-widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -445,7 +462,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "smpl-widgets.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -453,9 +470,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = smpl.;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Used to display your calendar events in the widget";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to fetch the weather of the place where is user is located";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to let you pick photos and albums for the image widget";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Calendar access lets the Events widget show upcoming events. Calendar data stays on this device.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to fetch local forecasts from Apple WeatherKit for the Weather widget.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -465,7 +481,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tnitish.smpl-widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -485,7 +501,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = appwidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = appwidgets/Info.plist;
@@ -496,7 +512,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tnitish.smpl-widgets.appwidgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -516,7 +532,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = appwidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = Q5UAL6TUVS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = appwidgets/Info.plist;
@@ -527,7 +543,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tnitish.smpl-widgets.appwidgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

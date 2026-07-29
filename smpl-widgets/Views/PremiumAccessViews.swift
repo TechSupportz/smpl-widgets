@@ -212,6 +212,7 @@ private struct StatusMessageBanner: View {
 	}
 }
 
+#if DEBUG
 #Preview("Locked") {
 	PremiumUnlockCard()
 		.padding()
@@ -223,3 +224,4 @@ private struct StatusMessageBanner: View {
 		.padding()
 		.environment(PurchaseManager.previewUnlocked)
 }
+#endif

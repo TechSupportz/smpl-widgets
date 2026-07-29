@@ -123,7 +123,7 @@ private struct CountdownProgressView: View {
 
 			Circle()
 				.fill(.secondary.opacity(0.12))
-				.overlay {
+			.overlay {
 					Circle()
 						.stroke(.primary.opacity(0.08), lineWidth: 0.5)
 				}

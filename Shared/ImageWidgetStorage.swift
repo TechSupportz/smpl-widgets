@@ -9,6 +9,7 @@ import Foundation
 import ImageIO
 import UIKit
 import UniformTypeIdentifiers
+import os
 
 private struct LegacyImageWidgetAlbumCache: Codable {
 	let fileNames: [String]
@@ -27,6 +28,7 @@ final class ImageWidgetStorage {
 
 	private let fileManager = FileManager.default
 	private let userDefaults: UserDefaults
+	private let logger = Logger(subsystem: "com.tnitish.smpl-widgets", category: "ImageWidgetStorage")
 
 	private init() {
 		self.userDefaults = UserDefaults(suiteName: appGroupID) ?? .standard
@@ -65,11 +67,15 @@ final class ImageWidgetStorage {
 
 	func imageData(forSlotID id: String, cropFamilyGroup: WidgetCropFamilyGroup) -> Data? {
 		guard let slot = slot(for: id),
-			let originalData = readData(for: slot.fileName),
-			let originalImage = UIImage(data: originalData),
+			let originalData = readData(for: slot.fileName)
+		else {
+			return nil
+		}
+
+		guard let originalImage = UIImage(data: originalData),
 			let cgImage = originalImage.cgImage
 		else {
-			return imageData(forSlotID: id)
+			return originalData
 		}
 
 		let cropRect: CropRect
@@ -102,7 +108,7 @@ final class ImageWidgetStorage {
 		)
 
 		guard let croppedCGImage = cgImage.cropping(to: pixelCrop) else {
-			return imageData(forSlotID: id)
+			return originalData
 		}
 
 		let croppedImage = UIImage(cgImage: croppedCGImage)
@@ -137,6 +143,7 @@ final class ImageWidgetStorage {
 		do {
 			try encodedImage.data.write(to: fileURL, options: .atomic)
 		} catch {
+			logger.error("Failed to write an image slot: \(error.localizedDescription)")
 			return nil
 		}
 
@@ -299,6 +306,7 @@ final class ImageWidgetStorage {
 					withIntermediateDirectories: true
 				)
 			} catch {
+				logger.error("Failed to create the image cache directory: \(error.localizedDescription)")
 				return nil
 			}
 		}
@@ -324,6 +332,10 @@ final class ImageWidgetStorage {
 			return
 		}
 
-		try? fileManager.removeItem(at: fileURL)
+		do {
+			try fileManager.removeItem(at: fileURL)
+		} catch {
+			logger.error("Failed to remove an image slot: \(error.localizedDescription)")
+		}
 	}
 }

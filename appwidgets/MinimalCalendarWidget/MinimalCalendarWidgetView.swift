@@ -9,19 +9,11 @@ import SwiftUI
 import WidgetKit
 
 struct MinimalCalendarWidgetView: View {
-	var entry: MinimalCalendarEntry
+	let entry: MinimalCalendarEntry
 
-	var currentDayNumber: Int {
-		switch entry.date.formatted(.dateTime.weekday()) {
-		case "Mon": 1
-		case "Tue": 2
-		case "Wed": 3
-		case "Thu": 4
-		case "Fri": 5
-		case "Sat": 6
-		case "Sun": 7
-		default: 7
-		}
+	private var currentDayNumber: Int {
+		let weekday = Calendar.current.component(.weekday, from: entry.date)
+		return ((weekday + 5) % 7) + 1
 	}
 
 	var body: some View {
@@ -53,10 +45,9 @@ struct MinimalCalendarWidgetView: View {
 				spacing: 2
 			) {
 				ForEach(1...7, id: \.self) { dayNumber in
-					if dayNumber <= currentDayNumber {
-						Circle().fill(dayNumber == 7 ? .red : .gray)
-					}
-					if dayNumber > currentDayNumber { Circle().fill(dayNumber == 7 ? .red : .gray).opacity(0.2) }
+					Circle()
+						.fill(dayNumber == 7 ? .red : .gray)
+						.opacity(dayNumber <= currentDayNumber ? 1 : 0.2)
 				}
 			}
 			.frame(

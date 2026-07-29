@@ -10,8 +10,8 @@ import UIKit
 import WidgetKit
 
 struct EventWidgetView: View {
-	var entry: EventEntry
-	@Environment(\.widgetFamily) var widgetFamily
+	let entry: EventEntry
+	@Environment(\.widgetFamily) private var widgetFamily
 
 	private struct EventSectionData: Identifiable {
 		let id: String
@@ -217,10 +217,6 @@ struct EventWidgetView: View {
 	}
 
 	private func hourHeaderText(for hour: Int) -> String {
-		let formatter = DateFormatter()
-		formatter.locale = .autoupdatingCurrent
-		formatter.setLocalizedDateFormatFromTemplate("j:mm")
-
 		var components = DateComponents()
 		components.hour = hour
 		components.minute = 0
@@ -229,7 +225,7 @@ struct EventWidgetView: View {
 			return String(format: "%02d:00", hour)
 		}
 
-		return formatter.string(from: date)
+		return date.formatted(date: .omitted, time: .shortened)
 	}
 
 	// MARK: - Shared Day Section
@@ -276,9 +272,7 @@ struct EventWidgetView: View {
 	}
 
 	private func dateHeaderText(for date: Date) -> String {
-		let formatter = DateFormatter()
-		formatter.dateFormat = "dd.MM.yy"
-		return formatter.string(from: date)
+		date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year(.twoDigits))
 	}
 
 	// MARK: - Events List Logic
@@ -533,11 +527,8 @@ struct EventWidgetView: View {
 	}
 
 	private func timeRangeText(for event: WidgetEvent) -> String {
-		let formatter = DateFormatter()
-		formatter.dateStyle = .none
-		formatter.timeStyle = .short
-		let start = formatter.string(from: event.startDate)
-		let end = formatter.string(from: event.endDate)
+		let start = event.startDate.formatted(date: .omitted, time: .shortened)
+		let end = event.endDate.formatted(date: .omitted, time: .shortened)
 		return "\(start) - \(end)"
 	}
 
@@ -562,10 +553,9 @@ struct EventWidgetView: View {
 		let startDay = calendar.startOfDay(for: event.startDate)
 		let endDay = calendar.startOfDay(for: event.endDate.addingTimeInterval(-1))
 
-		let formatter = DateFormatter()
-		formatter.dateFormat = "d MMM"
-
-		return "\(formatter.string(from: startDay)) - \(formatter.string(from: endDay))"
+		let start = startDay.formatted(.dateTime.day().month(.abbreviated))
+		let end = endDay.formatted(.dateTime.day().month(.abbreviated))
+		return "\(start) - \(end)"
 	}
 
 	// MARK: - Empty State View

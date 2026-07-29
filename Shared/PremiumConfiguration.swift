@@ -13,7 +13,7 @@ enum PremiumConfiguration {
 
 	static let paywallTitle = "Unlock all widgets"
 	static let paywallSubtitle =
-		"Minimal Calendar is included free. One purchase unlocks everything else"
+		"Minimal Calendar and Countdown are included free. One purchase unlocks everything else"
 	static let unlockedTitle = "You're all set"
 	static let unlockedSubtitle =
 		"All widgets are yours. Add them to your home screen anytime."

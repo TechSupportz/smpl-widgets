@@ -61,6 +61,7 @@ final class SharedSettings: ObservableObject {
 	private let lastBackgroundRefreshDateKey = "lastBackgroundRefreshDate"
 	private let lastKnownLocationKey = "com.tnitish.smpl-widgets.lastKnownLocation"
 	private let widgetColorSchemeKey = "com.tnitish.smpl-widgets.widgetColorScheme"
+	private let defaultEventCalendarIDsKey = "com.tnitish.smpl-widgets.defaultEventCalendarIDs"
 	private let mockDataEnabledKey = "com.tnitish.smpl-widgets.mockDataEnabled"
 	private let premiumUnlockedKey = "com.tnitish.smpl-widgets.premiumUnlocked"
 	private let premiumDisplayPriceKey = "com.tnitish.smpl-widgets.premiumDisplayPrice"
@@ -89,14 +90,45 @@ final class SharedSettings: ObservableObject {
 			return scheme
 		}
 		set {
+			guard widgetColorScheme != newValue else {
+				return
+			}
+
 			objectWillChange.send()
 			userDefaults.set(newValue.rawValue, forKey: widgetColorSchemeKey)
+		}
+	}
+
+	var defaultEventCalendarIDs: [String]? {
+		get {
+			guard userDefaults.object(forKey: defaultEventCalendarIDsKey) != nil else {
+				return nil
+			}
+
+			return userDefaults.stringArray(forKey: defaultEventCalendarIDsKey) ?? []
+		}
+		set {
+			guard defaultEventCalendarIDs != newValue else {
+				return
+			}
+
+			objectWillChange.send()
+
+			if let newValue {
+				userDefaults.set(newValue, forKey: defaultEventCalendarIDsKey)
+			} else {
+				userDefaults.removeObject(forKey: defaultEventCalendarIDsKey)
+			}
 		}
 	}
 
 	var isMockDataEnabled: Bool {
 		get { userDefaults.bool(forKey: mockDataEnabledKey) }
 		set {
+			guard isMockDataEnabled != newValue else {
+				return
+			}
+
 			objectWillChange.send()
 			userDefaults.set(newValue, forKey: mockDataEnabledKey)
 		}

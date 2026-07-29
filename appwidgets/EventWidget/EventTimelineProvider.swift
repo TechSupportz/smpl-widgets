@@ -87,15 +87,15 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 			) ?? currentDate.addingTimeInterval(86_400)
 			updateDates.insert(startOfNextDay)
 
-			// Add granular updates for event state changes from all week events
+			// Only today's state changes need entries. The midnight entry refetches later events.
 			for event in upcomingEvents {
 				// 1. When event starts (upcoming -> in progress)
-				if event.startDate > currentDate {
+				if event.startDate > currentDate && event.startDate < startOfNextDay {
 					updateDates.insert(event.startDate)
 				}
 
 				// 2. When event ends (in progress -> recently ended)
-				if event.endDate > currentDate {
+				if event.endDate > currentDate && event.endDate < startOfNextDay {
 					updateDates.insert(event.endDate)
 				}
 
@@ -164,11 +164,16 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		let endOfWindow = calendar.date(byAdding: .day, value: windowDays, to: startOfDay)
 			?? now.addingTimeInterval(TimeInterval(windowDays * 86_400))
 		let eventStore = EKEventStore()
+		let calendars = selectedCalendars(for: configuration, eventStore: eventStore)
+
+		if let calendars, calendars.isEmpty {
+			return []
+		}
 
 		let predicate = eventStore.predicateForEvents(
 			withStart: startOfDay,
 			end: endOfWindow,
-			calendars: selectedCalendars(for: configuration)
+			calendars: calendars
 		)
 
 		let ekEvents = eventStore.events(matching: predicate)
@@ -186,17 +191,34 @@ struct EventTimelineProvider: AppIntentTimelineProvider {
 		}
 	}
 
-	private func selectedCalendars(for configuration: EventConfigurationIntent) -> [EKCalendar]? {
-		let selectedCalendarIDs = Set(configuration.calendars?.map(\.id) ?? [])
-
-		guard !selectedCalendarIDs.isEmpty else {
+	private func selectedCalendars(
+		for configuration: EventConfigurationIntent,
+		eventStore: EKEventStore
+	) -> [EKCalendar]? {
+		guard let selectedCalendarIDs = selectedCalendarIDs(for: configuration) else {
 			return nil
 		}
 
-		let eventStore = EKEventStore()
+		guard !selectedCalendarIDs.isEmpty else {
+			return []
+		}
 
 		return eventStore.calendars(for: .event)
 			.filter { selectedCalendarIDs.contains($0.calendarIdentifier) }
+	}
+
+	private func selectedCalendarIDs(for configuration: EventConfigurationIntent) -> Set<String>? {
+		let configuredCalendarIDs = Set(configuration.calendars?.map(\.id) ?? [])
+
+		if !configuredCalendarIDs.isEmpty {
+			return configuredCalendarIDs
+		}
+
+		guard let defaultCalendarIDs = SharedSettings.shared.defaultEventCalendarIDs else {
+			return nil
+		}
+
+		return Set(defaultCalendarIDs)
 	}
 
 	// MARK: - Sample Data for Previews

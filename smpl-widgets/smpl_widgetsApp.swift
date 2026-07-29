@@ -15,8 +15,6 @@ import os
 struct smpl_widgetsApp: App {
 	@State private var purchaseManager = PurchaseManager()
 	@State private var isRedirecting = false
-	@State private var launchedFromWidget = false
-	@State private var isCheckingLaunchSource = true
 	@State private var deepLinkTarget: String?
 	@Environment(\.scenePhase) private var scenePhase
 	private let logger = Logger(subsystem: "com.tnitish.smpl-widgets", category: "AppRedirect")
@@ -32,24 +30,12 @@ struct smpl_widgetsApp: App {
 	var body: some Scene {
 		WindowGroup {
 			ZStack {
-				// Only show ContentView if confirmed NOT launched from widget
-				if !launchedFromWidget && !isRedirecting && !isCheckingLaunchSource {
-					ContentView(deepLinkTarget: $deepLinkTarget)
-						.environment(purchaseManager)
-				}
+				ContentView(deepLinkTarget: $deepLinkTarget)
+					.environment(purchaseManager)
 
-				// Show loading during check, redirect, or widget launch
-				if isRedirecting || launchedFromWidget || isCheckingLaunchSource {
+				if isRedirecting {
 					Color(.systemBackground).ignoresSafeArea()
 					ProgressView()
-				}
-			}
-			.onAppear {
-				// Give onOpenURL time to fire before showing ContentView
-				DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-					if !launchedFromWidget {
-						isCheckingLaunchSource = false
-					}
 				}
 			}
 			.task {
@@ -61,56 +47,45 @@ struct smpl_widgetsApp: App {
 				if scheme == "smplwidgets" {
 					let destination = url.host ?? ""
 
-					// Mark as launched from widget
-					launchedFromWidget = true
-					isCheckingLaunchSource = false
-					isRedirecting = true
-
 					let systemURL: URL?
 					switch destination {
 					case "calendar":
+						isRedirecting = true
 						systemURL = URL(string: "calshow://")
 					case "weather":
+						isRedirecting = true
 						systemURL = URL(string: "weather://")
 					case "image":
 						systemURL = nil
-						launchedFromWidget = false
 						isRedirecting = false
 						deepLinkTarget = imageWidgetSettingsSectionID
 					case "permissions":
-						// Open smpl. app and stay there (don't redirect)
 						systemURL = nil
-						launchedFromWidget = false
 						isRedirecting = false
 						deepLinkTarget = nil
 					case "premium":
 						systemURL = nil
-						launchedFromWidget = false
 						isRedirecting = false
 						deepLinkTarget = PremiumConfiguration.paywallSectionID
 					case "events":
-						// Open Calendar app to today's date
+						isRedirecting = true
 						let timestamp = Int(Date().timeIntervalSinceReferenceDate)
 						systemURL = URL(string: "calshow:\(timestamp)")
 					default:
 						systemURL = nil
+						isRedirecting = false
 						deepLinkTarget = nil
 						logger.warning("Unknown destination: \(destination)")
 					}
 
 					if let systemURL = systemURL {
-						UIApplication.shared.open(systemURL)
+						UIApplication.shared.open(systemURL) { _ in
+							isRedirecting = false
+						}
 					}
 				}
 			}
-			.onChange(of: scenePhase) { oldPhase, newPhase in
-				if newPhase == .active && (oldPhase == .background || oldPhase == .inactive)
-					&& launchedFromWidget
-				{
-					// Terminate the app when returning from widget-initiated redirect
-					exit(0)
-				}
-
+			.onChange(of: scenePhase) { _, newPhase in
 				if newPhase == .background {
 					scheduleBackgroundRefresh()
 				}

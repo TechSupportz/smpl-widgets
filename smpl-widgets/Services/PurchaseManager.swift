@@ -132,17 +132,17 @@ final class PurchaseManager {
 			isRestoring = false
 		}
 
-			do {
-				try await AppStore.sync()
-				await syncEntitlements()
+		do {
+			try await AppStore.sync()
+			await syncEntitlements()
 
-				if !isPremiumUnlocked {
-					statusMessage = PurchaseStatusMessage(
-						text: PremiumConfiguration.restoreMissingMessage,
-						tone: .info
-					)
-				}
-			} catch {
+			if !isPremiumUnlocked {
+				statusMessage = PurchaseStatusMessage(
+					text: PremiumConfiguration.restoreMissingMessage,
+					tone: .info
+				)
+			}
+		} catch {
 			statusMessage = PurchaseStatusMessage(
 				text: Self.message(for: error, fallback: PremiumConfiguration.restoreFailedMessage),
 				tone: .error
@@ -226,7 +226,7 @@ final class PurchaseManager {
 	}
 
 	private func observeTransactionUpdates() -> Task<Void, Never> {
-		Task.detached(priority: .background) { [weak self] in
+		Task(priority: .background) { [weak self] in
 			for await update in Transaction.updates {
 				do {
 					let transaction = try Self.verifiedTransaction(from: update)

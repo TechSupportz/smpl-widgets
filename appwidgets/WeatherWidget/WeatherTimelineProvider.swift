@@ -84,14 +84,15 @@ struct WeatherTimelineProvider: TimelineProvider {
 				completion(Timeline(entries: entries, policy: .after(nextFetchTime)))
 			} catch {
 				logger.error("❌ Failed to fetch weather: \(error.localizedDescription)")
-				// Retry after 5 minutes on error for faster recovery
+				let locationError = isLocationError(error)
+				let retryMinutes = locationError ? 60 : 15
 				let errorUpdateDate = calendar.date(
 					byAdding: .minute,
-					value: 5,
+					value: retryMinutes,
 					to: currentDate
-				) ?? currentDate.addingTimeInterval(300)
+				) ?? currentDate.addingTimeInterval(TimeInterval(retryMinutes * 60))
 
-				let errorCondition = isLocationError(error) ? "error,location" : "error"
+				let errorCondition = locationError ? "error,location" : "error"
 
 				let errorEntry = WeatherEntry(
 					date: currentDate,
@@ -158,7 +159,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 				date: currentDate,
 				condition: currentHourWeather.condition.description,
 				temperature: currentHourWeather.apparentTemperature,
-				symbol: "\(currentHourWeather.symbolName).fill"
+				symbol: currentHourWeather.symbolName
 			)
 			entries.append(immediateEntry)
 		}
@@ -196,7 +197,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 					date: displayTime,
 					condition: hourWeather.condition.description,
 					temperature: hourWeather.apparentTemperature,
-					symbol: "\(hourWeather.symbolName).fill"
+					symbol: hourWeather.symbolName
 				)
 				entries.append(entry)
 				logger.debug(

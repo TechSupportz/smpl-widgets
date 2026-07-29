@@ -44,7 +44,7 @@ struct WidgetEvent: Identifiable {
 	let calendarColor: Color
 
 	init(from ekEvent: EKEvent) {
-		self.id = ekEvent.eventIdentifier ?? UUID().uuidString
+		self.id = ekEvent.eventIdentifier ?? ekEvent.calendarItemIdentifier
 		self.title = ekEvent.title ?? "Untitled Event"
 		self.startDate = ekEvent.startDate
 		self.endDate = ekEvent.endDate
@@ -228,11 +228,13 @@ struct EventEntry: TimelineEntry {
 	var upcomingEvents: [WidgetEvent] {
 		let calendar = Calendar.current
 		let startOfToday = calendar.startOfDay(for: date)
-		let startOfAfterWindow = calendar.date(
+		guard let startOfAfterWindow = calendar.date(
 			byAdding: .day,
 			value: upcomingWindowDays,
 			to: startOfToday
-		)!
+		) else {
+			return []
+		}
 
 		return events.filter { event in
 			event.overlaps(start: startOfToday, end: startOfAfterWindow)
@@ -249,7 +251,13 @@ struct EventEntry: TimelineEntry {
 	var upcomingDaysEvents: [(date: Date, events: [WidgetEvent])] {
 		let calendar = Calendar.current
 		let today = calendar.startOfDay(for: date)
-		let endOfRange = calendar.date(byAdding: .day, value: upcomingWindowDays, to: today)!
+		guard let endOfRange = calendar.date(
+			byAdding: .day,
+			value: upcomingWindowDays,
+			to: today
+		) else {
+			return []
+		}
 
 		return Dictionary(grouping: upcomingEvents) {
 			$0.upcomingDisplayDay(relativeTo: date, calendar: calendar)

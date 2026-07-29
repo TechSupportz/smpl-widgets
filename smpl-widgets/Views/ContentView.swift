@@ -27,6 +27,7 @@ struct ContentView: View {
 	@State private var imageSlots: [ImageSlotMetadata] = ImageWidgetStorage.shared.allSlots
 	private let imageWidgetSettingsSectionID = "imageWidgetSettings"
 	private let premiumAccessSectionID = PremiumConfiguration.paywallSectionID
+	private let privacyPolicyURL = URL(string: "https://smpl.tnitish.com/privacy-policy")!
 
 	init(deepLinkTarget: Binding<String?> = .constant(nil)) {
 		_deepLinkTarget = deepLinkTarget
@@ -93,19 +94,6 @@ struct ContentView: View {
 		return "Last cached: \(cachedLocation.coordinateString) • \(updatedText)"
 	}
 
-	private var imageWidgetPermissionButtonTitle: String {
-		let status = imageWidgetPhotoService.authorizationStatus
-		if status == .denied || status == .restricted {
-			return "Open Settings"
-		}
-		return "Enable Photos"
-	}
-
-	private var isPhotosDeniedOrRestricted: Bool {
-		let status = imageWidgetPhotoService.authorizationStatus
-		return status == .denied || status == .restricted
-	}
-
 	var body: some View {
 		ZStack(alignment: .bottom) {
 			VStack(spacing: 24) {
@@ -136,7 +124,9 @@ struct ContentView: View {
 
 							appearanceSettingsCard()
 
-							PremiumFeatureGate(message: "Location access powers the premium Weather widget.") {
+							PremiumFeatureGate(
+								message: "Location access powers the premium Weather widget."
+							) {
 								permissionCard(
 									icon: locationStatusIcon,
 									iconColor: locationStatusColor,
@@ -156,29 +146,20 @@ struct ContentView: View {
 								)
 							}
 
-							PremiumFeatureGate(message: "Calendar access powers the premium Events widget.") {
-								permissionCard(
-									icon: calendarService.authorizationStatus.iconName,
-									iconColor: calendarService.authorizationStatus.iconColor,
-									title: "Calendar Access",
-									subtitle: calendarService.authorizationStatus.displayName,
-									showButton: !calendarService.isAuthorized,
-									buttonTitle: calendarService.isDenied
-										? "Open Settings" : "Enable Calendar",
-									buttonAction: {
-										if calendarService.isDenied {
-											openSettings()
-										} else {
-											calendarService.requestPermission()
-										}
-									}
-								)
+							PremiumFeatureGate(
+								message: "Calendar access powers the premium Events widget."
+							) {
+								calendarAccessSettingsCard()
 							}
 
-							PremiumFeatureGate(message: "Save, crop, and configure the premium Image widget here.") {
+							PremiumFeatureGate(
+								message: "Save, crop, and configure the premium Image widget here."
+							) {
 								imageWidgetSettingsCard()
 							}
-								.id(imageWidgetSettingsSectionID)
+							.id(imageWidgetSettingsSectionID)
+
+							AppInformationCard(privacyPolicyURL: privacyPolicyURL)
 						}
 						.padding(.horizontal)
 					}
@@ -187,7 +168,6 @@ struct ContentView: View {
 						// Refresh status when view appears (e.g., returning from Settings)
 						locationService.refreshAuthorizationStatus()
 						calendarService.refreshStatus()
-						imageWidgetPhotoService.refreshAuthorizationStatus()
 						refreshImageSlots()
 						scrollToDeepLinkTarget(using: proxy)
 					}
@@ -201,12 +181,12 @@ struct ContentView: View {
 						// Reload all widgets when color scheme preference changes
 						WidgetCenter.shared.reloadAllTimelines()
 					}
-#if DEBUG
-					.onChange(of: sharedSettings.isMockDataEnabled) {
-						// Reload all widgets when mock data mode changes
-						WidgetCenter.shared.reloadAllTimelines()
-					}
-#endif
+					#if DEBUG
+						.onChange(of: sharedSettings.isMockDataEnabled) {
+							// Reload all widgets when mock data mode changes
+							WidgetCenter.shared.reloadAllTimelines()
+						}
+					#endif
 					.contentMargins(.bottom, 96)
 					.contentMargins(.top, 32)
 					.mask(
@@ -322,13 +302,12 @@ struct ContentView: View {
 			.labelsHidden()
 			.pickerStyle(.menu)
 
+			#if DEBUG
+				Divider()
 
-#if DEBUG
-			Divider()
-
-			Toggle("Use Mock Data (Screenshots)", isOn: $sharedSettings.isMockDataEnabled)
-				.font(.body)
-#endif
+				Toggle("Use Mock Data (Screenshots)", isOn: $sharedSettings.isMockDataEnabled)
+					.font(.body)
+			#endif
 		}
 		.padding(.vertical, 16)
 		.padding(.horizontal, 24)
@@ -336,38 +315,58 @@ struct ContentView: View {
 	}
 
 	private func imageWidgetSettingsCard() -> some View {
-			ImageWidgetSettingsCard(
-				authorizationStatus: imageWidgetPhotoService.authorizationStatus,
-				isSaving: imageWidgetPhotoService.isSavingSlot,
-				slots: imageSlots,
-				permissionButtonTitle: imageWidgetPermissionButtonTitle,
-				selectedImageSlotItem: $selectedImageSlotItem,
-				onPermissionTap: {
-					Task { await requestImageWidgetPhotoPermission() }
-				},
-				onDeleteSlot: deleteImageSlot,
-				onCropSaved: refreshImageSlots
-			)
+		ImageWidgetSettingsCard(
+			isSaving: imageWidgetPhotoService.isSavingSlot,
+			slots: imageSlots,
+			selectedImageSlotItem: $selectedImageSlotItem,
+			onDeleteSlot: deleteImageSlot,
+			onCropSaved: refreshImageSlots
+		)
 		.onChange(of: selectedImageSlotItem) { _, newValue in
 			guard let newValue else { return }
 			Task { await saveSelectedImageSlot(from: newValue) }
 		}
 	}
 
+	private func calendarAccessSettingsCard() -> some View {
+		CalendarAccessSettingsCard(
+			authorizationStatus: calendarService.authorizationStatus,
+			calendars: calendarService.calendars,
+			selectedCalendarIDs: selectedDefaultEventCalendarIDs,
+			hasCustomDefaultSelection: sharedSettings.defaultEventCalendarIDs != nil,
+			permissionButtonTitle: calendarService.isDenied ? "Open Settings" : "Enable Calendar",
+			onPermissionTap: {
+				if calendarService.isDenied {
+					openSettings()
+				} else {
+					calendarService.requestPermission()
+				}
+			},
+			onSelectionChange: updateDefaultEventCalendars,
+			onUseAllCalendars: useAllEventCalendarsByDefault
+		)
+	}
+
 	// MARK: - Helpers
 
-	private func requestImageWidgetPhotoPermission() async {
-		if isPhotosDeniedOrRestricted {
-			openSettings()
-			return
+	private var selectedDefaultEventCalendarIDs: Set<String> {
+		if let defaultEventCalendarIDs = sharedSettings.defaultEventCalendarIDs {
+			return Set(defaultEventCalendarIDs)
 		}
 
-		let granted = await imageWidgetPhotoService.requestPermissionIfNeeded()
-		guard granted else {
-			
-			return
-		}
+		return Set(calendarService.calendars.map(\.id))
+	}
 
+	private func updateDefaultEventCalendars(_ selectedIDs: Set<String>) {
+		sharedSettings.defaultEventCalendarIDs = calendarService.calendars
+			.map(\.id)
+			.filter { selectedIDs.contains($0) }
+		WidgetCenter.shared.reloadTimelines(ofKind: "EventWidget")
+	}
+
+	private func useAllEventCalendarsByDefault() {
+		sharedSettings.defaultEventCalendarIDs = nil
+		WidgetCenter.shared.reloadTimelines(ofKind: "EventWidget")
 	}
 
 	private func saveSelectedImageSlot(from item: PhotosPickerItem) async {
@@ -427,7 +426,192 @@ struct ContentView: View {
 	}
 }
 
-#Preview {
-	ContentView(deepLinkTarget: .constant(nil))
-		.environment(PurchaseManager.previewLocked)
+private struct AppInformationCard: View {
+	let privacyPolicyURL: URL
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 16) {
+			HStack(spacing: 16) {
+				Image(systemName: "info.circle.fill")
+					.font(.title2)
+					.foregroundStyle(.blue)
+
+				VStack(alignment: .leading, spacing: 4) {
+					Text("About")
+						.font(.headline)
+					Text("Privacy and app information")
+						.font(.subheadline)
+						.foregroundStyle(.secondary)
+				}
+
+				Spacer()
+			}
+
+			Link(destination: privacyPolicyURL) {
+				HStack(spacing: 12) {
+					Label("Privacy Policy", systemImage: "hand.raised.fill")
+						.font(.body)
+
+					Spacer()
+
+					Image(systemName: "arrow.up.right")
+						.font(.footnote.weight(.semibold))
+						.foregroundStyle(.secondary)
+						.accessibilityHidden(true)
+				}
+				.padding(.vertical, 12)
+				.padding(.horizontal, 14)
+				.background(.white.opacity(0.08), in: .rect(cornerRadius: 18))
+			}
+			.buttonStyle(.plain)
+			.accessibilityHint("Opens in your browser")
+		}
+		.padding(.vertical, 16)
+		.padding(.horizontal, 24)
+		.glassEffect(in: .rect(cornerRadius: 24.0))
+	}
 }
+
+private struct CalendarAccessSettingsCard: View {
+	let authorizationStatus: EKAuthorizationStatus
+	let calendars: [CalendarSelectionOption]
+	let selectedCalendarIDs: Set<String>
+	let hasCustomDefaultSelection: Bool
+	let permissionButtonTitle: String
+	let onPermissionTap: () -> Void
+	let onSelectionChange: (Set<String>) -> Void
+	let onUseAllCalendars: () -> Void
+
+	private var isAuthorized: Bool {
+		authorizationStatus == .fullAccess
+	}
+
+	private var selectionStatusText: String {
+		if hasCustomDefaultSelection {
+			let selectedCount = selectedCalendarIDs.count
+			return "\(selectedCount) of \(calendars.count) selected for event widgets"
+		}
+
+		return "All calendars selected for event widgets"
+	}
+
+	var body: some View {
+		VStack(spacing: 16) {
+			HStack(spacing: 16) {
+				Image(systemName: authorizationStatus.iconName)
+					.font(.title2)
+					.foregroundStyle(authorizationStatus.iconColor)
+
+				VStack(alignment: .leading, spacing: 4) {
+					Text("Calendar Access")
+						.font(.headline)
+					Text(authorizationStatus.displayName)
+						.font(.subheadline)
+						.foregroundStyle(.secondary)
+				}
+				Spacer()
+			}
+
+			if isAuthorized {
+				calendarSelectionView
+			} else {
+				Button(action: onPermissionTap) {
+					Text(permissionButtonTitle)
+						.font(.headline)
+						.padding(.vertical, 8)
+				}
+				.buttonStyle(.automatic)
+			}
+		}
+		.padding(.vertical, 16)
+		.padding(.horizontal, 24)
+		.glassEffect(in: .rect(cornerRadius: 24.0))
+	}
+
+	@ViewBuilder
+	private var calendarSelectionView: some View {
+		if calendars.isEmpty {
+			Text("No calendars found")
+				.font(.callout)
+				.foregroundStyle(.secondary)
+				.frame(maxWidth: .infinity, alignment: .leading)
+		} else {
+			VStack(alignment: .leading, spacing: 12) {
+				HStack(alignment: .firstTextBaseline) {
+					VStack(alignment: .leading, spacing: 4) {
+						Text("Default Event Calendars")
+							.font(.callout)
+							.fontWeight(.semibold)
+						Text(selectionStatusText)
+							.font(.caption)
+							.foregroundStyle(.secondary)
+					}
+
+					Spacer()
+
+					if hasCustomDefaultSelection {
+						Button("Use All") {
+							onUseAllCalendars()
+						}
+						.font(.caption)
+					}
+				}
+
+				VStack(spacing: 8) {
+					ForEach(calendars) { calendar in
+						calendarRow(calendar)
+					}
+				}
+			}
+		}
+	}
+
+	private func calendarRow(_ calendar: CalendarSelectionOption) -> some View {
+		Toggle(
+			isOn: Binding(
+				get: {
+					selectedCalendarIDs.contains(calendar.id)
+				},
+				set: { isSelected in
+					var updatedSelection = selectedCalendarIDs
+
+					if isSelected {
+						updatedSelection.insert(calendar.id)
+					} else {
+						updatedSelection.remove(calendar.id)
+					}
+
+					onSelectionChange(updatedSelection)
+				}
+			)
+		) {
+			HStack(spacing: 10) {
+				Circle()
+					.fill(calendar.color)
+					.frame(width: 10, height: 10)
+
+				VStack(alignment: .leading, spacing: 2) {
+					Text(calendar.title)
+						.font(.body)
+
+					if let sourceDisplayName = calendar.sourceDisplayName {
+						Text(sourceDisplayName)
+							.font(.caption)
+							.foregroundStyle(.secondary)
+					}
+				}
+			}
+		}
+		.toggleStyle(.switch)
+		.padding(.vertical, 8)
+		.padding(.horizontal, 12)
+		.background(.white.opacity(0.08), in: .rect(cornerRadius: 18))
+	}
+}
+
+#if DEBUG
+	#Preview {
+		ContentView(deepLinkTarget: .constant(nil))
+			.environment(PurchaseManager.previewLocked)
+	}
+#endif
