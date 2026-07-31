@@ -27,7 +27,8 @@ enum PremiumConfiguration {
 	static let unavailableMessage = "Purchase is not available right now. Try again later."
 	static let purchaseFailedMessage = "Something went wrong. Your card was not charged."
 	static let restoreFailedMessage = "Couldn't restore your purchase. Try again."
-	static let verificationFailedMessage = "Purchase verification failed. Contact support if this persists."
+	static let verificationFailedMessage =
+		"Purchase verification failed. Contact support if this persists."
 
 	static let paywallSectionID = "premiumAccess"
 	static let paywallURL = URL(string: "smplwidgets://premium")!
@@ -49,8 +50,16 @@ enum PremiumConfiguration {
 		"ImageWidget",
 	]
 
+	static var isFreeTestFlightBuild: Bool {
+		#if FREE_TESTFLIGHT
+			true
+		#else
+			false
+		#endif
+	}
+
 	static var isUnlocked: Bool {
-		SharedSettings.shared.isPremiumUnlocked
+		isFreeTestFlightBuild || SharedSettings.shared.isPremiumUnlocked
 	}
 
 	static var sharedPriceText: String? {
@@ -66,8 +75,8 @@ enum PremiumConfiguration {
 	}
 }
 
-private extension String {
-	var nilIfEmpty: String? {
+extension String {
+	fileprivate var nilIfEmpty: String? {
 		let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
 		return trimmed.isEmpty ? nil : trimmed
 	}

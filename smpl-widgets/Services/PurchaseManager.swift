@@ -36,6 +36,10 @@ final class PurchaseManager {
 	@ObservationIgnored private var transactionUpdatesTask: Task<Void, Never>?
 
 	init() {
+		guard !PremiumConfiguration.isFreeTestFlightBuild else {
+			return
+		}
+
 		transactionUpdatesTask = observeTransactionUpdates()
 	}
 
@@ -57,15 +61,29 @@ final class PurchaseManager {
 		}
 
 		hasStarted = true
+
+		guard !PremiumConfiguration.isFreeTestFlightBuild else {
+			return
+		}
+
 		await refresh()
 	}
 
 	func refresh() async {
+		guard !PremiumConfiguration.isFreeTestFlightBuild else {
+			isPremiumUnlocked = true
+			return
+		}
+
 		await loadProductsIfNeeded(force: unlockProduct == nil)
 		await syncEntitlements()
 	}
 
 	func purchaseUnlock() async {
+		guard !PremiumConfiguration.isFreeTestFlightBuild else {
+			return
+		}
+
 		guard !isPurchasing && !isRestoring else {
 			return
 		}
@@ -94,7 +112,8 @@ final class PurchaseManager {
 				let transaction = try Self.verifiedTransaction(from: verificationResult)
 				await transaction.finish()
 				await syncEntitlements()
-				statusMessage = isPremiumUnlocked
+				statusMessage =
+					isPremiumUnlocked
 					? nil
 					: PurchaseStatusMessage(
 						text: PremiumConfiguration.verificationFailedMessage,
@@ -115,13 +134,18 @@ final class PurchaseManager {
 			}
 		} catch {
 			statusMessage = PurchaseStatusMessage(
-				text: Self.message(for: error, fallback: PremiumConfiguration.purchaseFailedMessage),
+				text: Self.message(
+					for: error, fallback: PremiumConfiguration.purchaseFailedMessage),
 				tone: .error
 			)
 		}
 	}
 
 	func restorePurchases() async {
+		guard !PremiumConfiguration.isFreeTestFlightBuild else {
+			return
+		}
+
 		guard !isPurchasing && !isRestoring else {
 			return
 		}
@@ -261,21 +285,21 @@ final class PurchaseManager {
 }
 
 #if DEBUG
-extension PurchaseManager {
-	static var previewLocked: PurchaseManager {
-		let manager = PurchaseManager()
-		manager.transactionUpdatesTask?.cancel()
-		manager.priceText = "$4.99"
-		manager.isPremiumUnlocked = false
-		return manager
-	}
+	extension PurchaseManager {
+		static var previewLocked: PurchaseManager {
+			let manager = PurchaseManager()
+			manager.transactionUpdatesTask?.cancel()
+			manager.priceText = "$4.99"
+			manager.isPremiumUnlocked = false
+			return manager
+		}
 
-	static var previewUnlocked: PurchaseManager {
-		let manager = PurchaseManager()
-		manager.transactionUpdatesTask?.cancel()
-		manager.priceText = "$4.99"
-		manager.isPremiumUnlocked = true
-		return manager
+		static var previewUnlocked: PurchaseManager {
+			let manager = PurchaseManager()
+			manager.transactionUpdatesTask?.cancel()
+			manager.priceText = "$4.99"
+			manager.isPremiumUnlocked = true
+			return manager
+		}
 	}
-}
 #endif
