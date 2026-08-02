@@ -23,7 +23,7 @@ struct WeatherWidgetView: View {
 	}
 
 	var symbol: String {
-		entry.condition == "error,location" ? "location.slash.circle" : entry.symbol
+		entry.condition == "error,location" ? "location.slash.circle.fill" : entry.symbol
 	}
 
 	var body: some View {
@@ -51,6 +51,7 @@ struct WeatherWidgetView: View {
 			)
 			Spacer()
 			Image(systemName: symbol)
+				.symbolVariant(.fill)
 				.font(.system(size: 64))
 				.fontWidth(.compressed)
 				.fontWeight(.medium)

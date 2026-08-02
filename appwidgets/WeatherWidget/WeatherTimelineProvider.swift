@@ -98,7 +98,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 					date: currentDate,
 					condition: errorCondition,
 					temperature: Measurement<UnitTemperature>(value: 0.0, unit: .celsius),
-					symbol: "questionmark.square.dashed"
+					symbol: "questionmark.square.fill"
 				)
 				completion(Timeline(entries: [errorEntry], policy: .after(errorUpdateDate)))
 			}
@@ -212,7 +212,7 @@ struct WeatherTimelineProvider: TimelineProvider {
 				date: currentDate,
 				condition: "error",
 				temperature: Measurement<UnitTemperature>(value: 0.0, unit: .celsius),
-				symbol: "questionmark.square.dashed"
+				symbol: "questionmark.square.fill"
 			))
 		}
 

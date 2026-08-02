@@ -33,12 +33,12 @@ struct WeatherWidget: Widget {
 	WeatherEntry(
 		date: .now, condition: "error",
 		temperature: Measurement<UnitTemperature>(value: 25, unit: .celsius),
-		symbol: "questionmark.square.dashed")
+		symbol: "questionmark.square.fill")
 }
 
 #Preview("location-error-state", as: .systemSmall) { WeatherWidget() } timeline: {
 	WeatherEntry(
 		date: .now, condition: "error,location",
 		temperature: Measurement<UnitTemperature>(value: 25, unit: .celsius),
-		symbol: "questionmark.square.dashed")
+		symbol: "questionmark.square.fill")
 }
