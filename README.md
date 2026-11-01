@@ -32,6 +32,6 @@ Everything is SwiftUI and WidgetKit, with no third-party dependencies.
 - **`smpl-widgets/`** is the container app. It handles permissions, the photo crop editor, widget settings and the purchase flow.
 - **`appwidgets/`** is the widget extension. Each widget lives in its own folder with an entry, timeline provider, widget definition and view.
 - **`Shared/`** holds the code both targets need, like settings and saved images, shared through an App Group so the app and widgets stay in sync.
-- **`website/`** is the static privacy policy page, deployed on Cloudflare Pages.
+- **`website/`** is the static privacy policy page, served by a Cloudflare Worker.
 
 Widget designs are prototyped in Figma before they're built, so each one has a fixed layout instead of a pile of options.

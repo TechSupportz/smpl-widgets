@@ -9,16 +9,20 @@ Static files for `https://smpl.tnitish.com/privacy-policy`.
 - Review the policy whenever the app adds analytics, advertising, accounts,
   developer-operated servers, new permissions, or a new third-party service.
 
-## Cloudflare Pages
+## Deploying
 
-For a Git-connected Pages project:
+The site is the assets-only Worker `smpl-widgets-privacy-policy`, configured in
+`wrangler.jsonc`. Deploy from this directory:
 
-- Framework preset: `None`
-- Build command: leave blank
-- Build output directory: `website`
+```bash
+wrangler deploy
+```
 
-For Direct Upload, upload the contents of this `website` directory.
+The Worker only handles `smpl.tnitish.com/privacy-policy*` and `/app-icon.png`. Every other
+path on the subdomain goes to the TestFlight link through the zone redirect rule named
+`smpl.widgets`, which excludes those same paths. If you add a page or asset here, add it
+to both the Worker routes and that rule, or it will redirect to TestFlight instead.
 
-The `_redirects` file routes the site root and the non-trailing-slash policy URL to
-`/privacy-policy/`. The `_headers` file adds a restrictive Content Security Policy and
-other browser security headers.
+`.assetsignore` keeps this README and the config files from being uploaded. The
+`_headers` file adds a restrictive Content Security Policy and other browser security
+headers.

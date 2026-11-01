@@ -1,0 +1,14 @@
+{
+	"name": "smpl-widgets-privacy-policy",
+	"compatibility_date": "2026-10-23",
+	"assets": {
+		"directory": ".",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "none"
+	},
+	"routes": [
+		{ "pattern": "smpl.tnitish.com/privacy-policy*", "zone_name": "tnitish.com" },
+		{ "pattern": "smpl.tnitish.com/app-icon.png", "zone_name": "tnitish.com" }
+	],
+	"workers_dev": false
+}
